@@ -75,7 +75,7 @@ public sealed class IrcServerSupport
     /// <summary>Puts <paramref name="modes"/> in rank order, highest first, and drops unknown or repeated ones.</summary>
     public string SortPrefixModes(IEnumerable<char> modes)
     {
-        var set = modes.ToHashSet();
+        var set = new HashSet<char>(modes);
         return new string(PrefixModes.Where(set.Contains).ToArray());
     }
 

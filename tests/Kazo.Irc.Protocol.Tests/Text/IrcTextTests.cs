@@ -104,6 +104,16 @@ public sealed class IrcTextSplitterTests
     }
 
     [Fact]
+    public void Split_counts_three_byte_characters_and_lone_surrogates_as_utf8_does()
+    {
+        // "€" is 3 bytes; a lone surrogate is written as U+FFFD, 3 bytes too.
+        var pieces = IrcTextSplitter.Split("€€\uD800€", 6);
+
+        Assert.All(pieces, p => Assert.True(Encoding.UTF8.GetByteCount(p) <= 6));
+        Assert.Equal(["€€", "\uD800€"], pieces);
+    }
+
+    [Fact]
     public void Split_refuses_a_limit_below_one_character()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => IrcTextSplitter.Split("abc", 3));

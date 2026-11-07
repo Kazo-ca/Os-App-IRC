@@ -44,20 +44,28 @@ public static class IrcTextSplitter
     }
 
     /// <summary>The number of chars of the longest start of <paramref name="text"/> that fits <paramref name="maxBytes"/>.</summary>
+    /// <remarks>
+    /// Walks the UTF-16 text by hand, not with <c>EnumerateRunes</c>: the trimmed Kazo OS runtime that
+    /// runs an installed app has no <c>System.Text.Rune</c> (kazopkg refuses the package). A surrogate
+    /// pair is one character of 4 UTF-8 bytes and is never cut; a lone surrogate is written as U+FFFD
+    /// (3 bytes), as UTF-8 encoding does.
+    /// </remarks>
     private static int LongestPrefix(string text, int maxBytes)
     {
         var bytes = 0;
         var index = 0;
-        foreach (var rune in text.EnumerateRunes())
+        while (index < text.Length)
         {
-            var size = rune.Utf8SequenceLength;
+            var c = text[index];
+            var pair = char.IsHighSurrogate(c) && index + 1 < text.Length && char.IsLowSurrogate(text[index + 1]);
+            var size = pair ? 4 : c < 0x80 ? 1 : c < 0x800 ? 2 : 3;
             if (bytes + size > maxBytes)
             {
                 break;
             }
 
             bytes += size;
-            index += rune.Utf16SequenceLength;
+            index += pair ? 2 : 1;
         }
 
         return index;

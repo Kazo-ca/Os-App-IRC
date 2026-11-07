@@ -354,7 +354,7 @@ public sealed partial class IrcClient : IAsyncDisposable
             channel.ClearModes();
         }
 
-        var keep = _queries.Keys.ToHashSet();
+        var keep = new HashSet<string>(_queries.Keys, _queries.Comparer);
         foreach (var key in _users.Keys.Where(k => !keep.Contains(k)).ToList())
         {
             _users.Remove(key);

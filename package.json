@@ -1,11 +1,13 @@
 {
   "name": "kazo-irc-tests",
   "private": true,
-  "description": "End-to-end runs of the IRC app in the Kazo OS host (Playwright).",
+  "description": "End-to-end runs of the IRC app in the Kazo OS host (Playwright), the Store screenshots and the installed-app check.",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test:e2e": "node --test --test-concurrency=1 tests/e2e/*.e2e.mjs"
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/*.e2e.mjs",
+    "store:screenshots": "node tests/store/screenshots.mjs",
+    "test:installed": "node tests/installed/install-and-chat.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"
