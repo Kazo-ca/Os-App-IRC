@@ -22,6 +22,7 @@ Os-App-IRC/
 ├─ src/
 │  ├─ Kazo.Irc/              # l'app
 │  ├─ Kazo.Irc.Os/           # hôte : Kazo OS, ses apps de base et IRC
+│  ├─ Kazo.Irc.Demo/         # le réseau de démonstration, un serveur IRC en mémoire (chantier 4, jamais dans le Store)
 │  └─ Kazo.Irc.Protocol/     # le protocole IRC, sans dépendance au SDK Kazo (chantier 2)
 ├─ tests/
 │  ├─ Kazo.Irc.Tests/        # tests unitaires C# de l'app (xUnit)
@@ -58,14 +59,16 @@ après coup (sans sous-module, le build s'arrête sur `KOSAPP0070`).
 
 | Dossier ou fichier | Rôle |
 | --- | --- |
-| `IrcApp.cs` | Manifeste (`[AppManifest]`) : id `ca.kazo.irc`, nom « IRC », version `1.0.0`, éditeur `pub.kazo`, catégorie `communication` (décision 20), **ordinateur et mobile** (`MobileEntryPoint` = la même fenêtre, décision 7), `SingleInstancePerUser` (décision 8). Fenêtre de 960×620, redimensionnable jusqu'à 340×400. Capacités du chantier 1 : `filesystem.private.read` et `.write` seulement (le fichier de réglages). Chaque chantier ajoute celles que son code utilise : `network.real.access` et les ports réels au chantier 3 (après l'ADR 0235 §3 de Kazo OS), les notifications et les journaux au chantier 4, `apps.launch` au chantier 5. |
-| `IrcWindow.razor`, `.razor.cs`, `.razor.css` | La fenêtre unique : barre d'outils, trois colonnes, panneaux du mode compact, ligne d'état. |
-| `Components/ChannelList` | Colonne de gauche : les réseaux et leurs salons (vide au chantier 1). |
-| `Components/MessagePane` | Colonne du milieu : les messages (`role="log"`) et la ligne de saisie (désactivée tant qu'il n'y a pas de connexion). |
-| `Components/UserList` | Colonne de droite : les utilisateurs du salon (vide au chantier 1). |
+| `IrcApp.cs` | Manifeste (`[AppManifest]`) : id `ca.kazo.irc`, nom « IRC », version `1.0.0`, éditeur `pub.kazo`, catégorie `communication` (décision 20), **ordinateur et mobile** (`MobileEntryPoint` = la même fenêtre, décision 7), `SingleInstancePerUser` (décision 8). Fenêtre de 960×620, redimensionnable jusqu'à 340×400. Capacités : `filesystem.private.read` et `.write` (le fichier de réglages, chantier 1) ; `notifications.post`, `filesystem.user-home.read` et `.write` (notifications et journaux, chantier 4). Chaque chantier ajoute celles que son code utilise : `network.real.access` et les ports réels au chantier 3 (après l'ADR 0235 §3 de Kazo OS), `apps.launch` au chantier 5. |
+| `IrcWindow.razor`, `.razor.cs`, `.razor.css` | La fenêtre unique : barre d'outils (titre et sujet, boutons « Journaux » et « Police console »), trois colonnes, panneaux du mode compact, ligne d'état. Elle tient un `IrcChat`, suit le focus de la fenêtre, tient le compteur du titre et envoie `QUIT` quand elle se ferme (`IWindowCloseGuard`, décision 8). |
+| `Components/ChannelList` | Colonne de gauche : chaque réseau (pastille d'état), son onglet du serveur, ses salons et conversations privées, avec les pastilles de non-lus et de mentions et un × pour fermer ; les réseaux qu'on peut ouvrir. |
+| `Components/MessagePane` (`.razor`, `.razor.cs`, `.razor.css`, `.razor.js`) | Colonne du milieu : les lignes (`role="log"`, la plus récente en bas) et la ligne de saisie avec historique et complétion des pseudos. |
+| `Components/UserList` | Colonne de droite : les utilisateurs du salon avec leur préfixe ; un clic ouvre une conversation privée. |
+| `Chat/` | La discussion sans Blazor (voir « Discussion » plus bas) : `IrcChat`, `IrcSession`, `Conversation`, `ChatLine`, `IrcNetwork` et `IIrcTransportFactory`, `IrcMentions`, `IrcNick`, `InputHistory`, `NickCompleter`, `IIrcNotifier` / `KazoIrcNotifier`, `DemoNetwork` (sous `IRC_DEMO`). |
+| `Logs/` | `IrcLog` (chemins, noms sûrs, format des lignes) et `IrcLogWriter` (écrit dans l'ordre). |
 | `Layout/IrcLayout.cs`, `IrcPanel.cs` | Quel panneau latéral est ouvert en mode compact (aucun, salons ou utilisateurs ; un seul à la fois). |
-| `Settings/IrcSettings.cs` | `~/.config/ca.kazo.irc/settings.json` : la police console (décision 19). Un fichier absent, illisible ou cassé donne les valeurs par défaut ; un champ inconnu (ajouté par un chantier suivant) est ignoré. |
-| `Settings/IIrcFileSystem.cs`, `KazoIrcFileSystem.cs` | Lecture et écriture des fichiers de l'app ; une version en mémoire sert aux tests. |
+| `Settings/IrcSettings.cs` | `~/.config/ca.kazo.irc/settings.json` : la police console (décision 19) et les journaux (`logsEnabled`, activés par défaut, décision 15). Un fichier absent, illisible ou cassé donne les valeurs par défaut ; un champ inconnu (ajouté par un chantier suivant) est ignoré. |
+| `Settings/IIrcFileSystem.cs`, `KazoIrcFileSystem.cs`, `AppScopedFileSystem.cs` | Lecture, écriture et ajout en fin des fichiers de l'app ; une version en mémoire sert aux tests. `AppScopedFileSystem` entre dans le contexte de l'app pour les écritures faites depuis la boucle de lecture du client (voir « Journaux »). |
 | `Resources/Strings*.resx` | Les textes de l'interface, en anglais et en français (ADR 0104). |
 | `Resources/AppManifest.fr.resx` | Nom et description en français, écrits dans `localization/fr.json` par le build. |
 | `wwwroot/icons/app.svg` | Icône illustrée dans le style des icônes d'apps (ADR 0232 de Kazo OS) : tuile sombre commune, deux bulles de discussion, un `#` dans celle de devant. |
@@ -103,6 +106,91 @@ créer (comme `mkdir -p`) ; regarder `~/.config` demande
 `filesystem.user-home.read`, que l'app ne demande pas. `KazoIrcFileSystem` crée
 donc seulement `~/.config/ca.kazo.irc/` (comme `mkdir` sans `-p`), par la
 passerelle de fichiers de l'app, quand il n'existe pas.
+
+## Discussion (chantier 4)
+
+Le chantier 4 branche le client du protocole à la fenêtre, avec le réseau de
+démonstration comme seul transport ; le chantier 3 ajoute les vrais.
+
+```text
+IrcWindow ──> IrcChat ──> IrcSession (une par réseau) ──> IrcClient ──> IIrcTransport
+                 │              └─ Conversation (onglet du serveur, salons, privé) ──> ChatLine
+                 ├─ IIrcNotifier (KazoIrcNotifier : notification de l'OS + son)
+                 └─ IrcLogWriter ──> IIrcFileSystem (AppScopedFileSystem ──> KazoIrcFileSystem)
+```
+
+| Type | Rôle |
+| --- | --- |
+| `IrcNetwork`, `IrcNetworkCatalog`, `IIrcTransportFactory` | Un réseau a un `TransportKind` ; le catalogue donne au client une fonction qui crée un nouveau transport de ce genre à chaque tentative de connexion. Chantier 4 : genre `demo` seulement. Le chantier 3 ajoute `websocket` et `relay`. |
+| `IrcSession` | Un réseau : son `IrcClient` et ses conversations, remplies par les événements du client. Un message va à son salon ou à sa conversation privée ; un avis privé va là où cette personne parle déjà, sinon à l'onglet du serveur ; les numériques, le MOTD, le WHOIS, les erreurs et l'état de la connexion vont à l'onglet du serveur. Une conversation privée suit un changement de pseudo. |
+| `Conversation` | L'onglet du serveur, un salon ou une conversation privée : ses 1000 dernières lignes (`MaxLines`), `UnreadCount`, `HighlightCount`, ses utilisateurs et son sujet tirés du modèle du client. |
+| `ChatLine` | Heure, genre (message, action, avis, activité, serveur, erreur), pseudo, texte, `IsOwn`, `IsMention`. |
+| `IrcChat` | Les réseaux, la conversation ouverte, les lignes tapées (`IrcInputParser` puis `IrcClient.ExecuteAsync` ; une ligne refusée donne un `ChatInputProblem` que la fenêtre traduit), les compteurs, les notifications et les journaux. `/join` ouvre le salon quand le serveur le confirme (pas après une reconnexion) ; `/query` ouvre la conversation privée. |
+| `IrcNick` | Le pseudo par défaut (décision 12) : le nom d'utilisateur de l'OS, en gardant les caractères permis dans un pseudo, 16 au plus. |
+
+### Ce qu'on dit à l'utilisateur (décision 14)
+
+| Événement | Effet |
+| --- | --- |
+| Un message d'un autre dans une conversation qui n'est pas ouverte, ou quand la fenêtre n'a pas le focus | `UnreadCount` + 1 : la conversation est en gras dans la liste, avec une pastille grise. |
+| Une **mention** (`IrcMentions` : le pseudo en mot entier, toute casse) ou un **message privé**, pas vu | `HighlightCount` + 1 : la conversation passe à la couleur d'avertissement avec une pastille ambre, et le titre de la fenêtre devient « (N) IRC », N = toutes les mises en évidence (`IrcChat.AttentionCount`). La ligne de la mention est mise en évidence dans la conversation. |
+| La même chose quand la fenêtre n'a **pas** le focus (une autre fenêtre active, ou réduite) | Une notification de l'OS (« kazo-bot dans #kazo », « kazo-bot (privé) »), que l'OS montre en bulle avec le son des notifications. Les avis ne notifient jamais. |
+| La conversation est ouverte et la fenêtre reprend le focus | Les deux compteurs reviennent à 0 ; le titre redevient « IRC ». |
+
+Le focus vient des événements de fenêtre du SDK (`OnWindowActivated`,
+`OnWindowDeactivated`, `OnWindowStateChanged`). Une conversation privée
+commencée par quelqu'un d'autre n'éloigne pas l'utilisateur de la conversation
+ouverte.
+
+### Ligne de saisie
+
+Entrée envoie ; ↑ et ↓ parcourent les 100 dernières lignes (`InputHistory`, la
+ligne en cours est gardée) ; Tab complète le dernier mot avec les utilisateurs
+du salon (ou l'autre personne) et passe d'une correspondance à l'autre, avec
+`": "` au début de la ligne (`NickCompleter`). Blazor ne sait pas annuler une
+seule touche : `MessagePane.razor.js` annule l'action par défaut de Tab, et
+seulement quand la saisie contient du texte ; une saisie vide laisse Tab en
+sortir. Les lignes suivent la plus récente sans script
+(`flex-direction: column-reverse`), et seules les 400 dernières sont rendues.
+
+### Journaux (décision 15)
+
+| Règle | Valeur |
+| --- | --- |
+| Fichier | `~/.local/share/ca.kazo.irc/logs/<réseau>/<conversation>/AAAA-MM-JJ.log`, le jour et les heures dans le fuseau de l'OS (`AppContext.TimeZone`). |
+| Lignes | `[HH:MM:SS] <pseudo> texte`, `[HH:MM:SS] * pseudo action`, `[HH:MM:SS] -pseudo- avis`, `[HH:MM:SS] *** pseudo joined` (et left, quit, is now known as, changed the topic, sets mode, is away, is back : le format des journaux ne dépend pas de la langue). L'onglet du serveur et les lignes du serveur ne sont pas écrits. |
+| Noms | `IrcLog.SafeName` : `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|` et les caractères de contrôle deviennent `_` ; un point au début devient `_` (donc jamais `.`, `..` ni un dossier caché) ; jamais vide ; 64 caractères au plus. Le nom de la conversation est ramené à une casse selon les règles du réseau (`#Kazo` et `#kazo` partagent un dossier). |
+| Ordre et erreurs | `IrcLogWriter` écrit une ligne après l'autre. Le premier échec est montré une fois sur la ligne d'état et n'arrête jamais la discussion ni les lignes suivantes. |
+| Option | Le bouton « Journaux » (`aria-pressed`) enregistre `logsEnabled` dans `settings.json`. |
+| Contexte | Les lignes arrivent de la boucle de lecture du client, que l'OS n'a pas lancée : `KazoFile` n'y trouverait pas de contexte d'app. `AppScopedFileSystem` y entre (`KazoExecutionContext.Enter`) pour chaque opération. |
+
+Une autre app qui lit un journal juste après l'écriture d'une ligne peut la voir
+quelques secondes plus tard (système de fichiers de l'OS) ; le test de bout en
+bout relit.
+
+### Réseau de démonstration
+
+`Kazo.Irc.Demo` contient `DemoIrcServer`, un `IIrcTransport` qui joue un petit
+serveur IRC en mémoire (sans référence au SDK). Il enregistre le client (CAP,
+numériques de bienvenue, `005`, MOTD qui dit quoi essayer), répond à `PING`,
+`JOIN` (sujet et `NAMES` avec `@kazo-bot`, `+morpheus`, `trinity`), `PART`,
+`TOPIC`, `WHOIS`, `AWAY`, `NICK`, `MODE`, `QUIT`, refuse le pseudo du robot
+(`433`) et les commandes inconnues (`421`). Son robot, `kazo-bot` :
+
+| Vous écrivez | Le robot |
+| --- | --- |
+| un message de salon qui le nomme | répond tout de suite et vous nomme (une mention) |
+| `!mention N` dans un salon | vous nomme dans ce salon N secondes plus tard (3 par défaut, 60 au plus) |
+| `!private N` dans un salon | vous envoie un message privé N secondes plus tard |
+| un message privé | répond en privé |
+
+Il est proposé sous le nom « Kazo Demo » seulement quand l'app est compilée
+avec `IrcDemoNetwork=true` : par défaut en Debug, et dans la CI avec
+`dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` pour les tests
+de bout en bout. `Kazo.Irc` référence alors `Kazo.Irc.Demo` et définit
+`IRC_DEMO` (`Chat/DemoNetwork.cs`, `Chat/IrcNetworks.cs`). Le Store et les
+paquets compilent Release sans lui : le paquet n'a ni `Kazo.Irc.Demo.dll` ni le
+code de démonstration.
 
 ## Protocole (`Kazo.Irc.Protocol`)
 
@@ -213,8 +301,8 @@ dotnet test Kazo.Irc.slnx
 | Suite | Commande | Contenu |
 | --- | --- | --- |
 | Protocole (xUnit) | `dotnet test Kazo.Irc.slnx` | voir « Tests du protocole » ci-dessus. |
-| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifeste (classe et `manifest.json` produit, textes français, icône), textes anglais et français complets, panneaux du mode compact, réglages (chemin, défauts, fichier cassé ou refusé, champ inconnu, écriture qui échoue). |
-| Bout en bout | `npm run test:e2e` après `dotnet build Kazo.Irc.slnx -c Release` | dans l'hôte, profil neuf : trois colonnes côte à côte sur ordinateur dans le thème de l'OS ; police console gardée après fermeture et réouverture ; sur un Pixel 7, une colonne et les deux panneaux. |
+| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifeste (classe et `manifest.json` produit, textes français, icône, capacités), textes anglais et français complets, panneaux du mode compact, réglages (chemin, défauts, fichier cassé ou refusé, champ inconnu, écriture qui échoue, option des journaux) ; discussion sur le serveur de démonstration avec une fausse horloge (connexion, salon, messages, mentions, messages privés, non-lus, compteur du titre, notifications avec et sans le focus, lignes refusées, fermeture, `QUIT`) ; mentions, pseudo par défaut, historique, complétion ; journaux (chemins, noms hostiles, format, fuseau, option, écriture qui échoue) ; le serveur de démonstration. |
+| Bout en bout | `npm run test:e2e` après `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | dans l'hôte, profil neuf : trois colonnes côte à côte sur ordinateur dans le thème de l'OS ; police console gardée après fermeture et réouverture ; sur un Pixel 7, une colonne et les deux panneaux ; `chat.e2e.mjs` : connexion au réseau de démonstration, `/join #kazo`, envoyer et recevoir, historique et Tab, une mention pendant que le Terminal a le focus donne une notification de l'OS et « (1) IRC », le journal lu avec `cat` dans le Terminal, un message privé compté, fermeture de la fenêtre, la discussion sur un Pixel 7. |
 
 Les tests de bout en bout démarrent l'hôte (`dotnet run --no-build -c Release`)
 sur un port libre, ou utilisent `IRC_BASE_URL`.
@@ -225,6 +313,7 @@ sur un port libre, ou utilisent `IRC_BASE_URL`.
 | --- | --- |
 | 1. `irc/1-solution` | Solution, hôte, CI, manifeste, icône, fenêtre et mise en page vides, police console, tests. |
 | 2. `irc/2-protocol` | Bibliothèque `Kazo.Irc.Protocol` et ses tests (section « Protocole » ci-dessus). |
+| 4. `irc/4-notifications-and-logs` | La discussion branchée à la fenêtre sur le réseau de démonstration, notifications et compteur du titre, journaux (section « Discussion » ci-dessus). |
 
 ## Tâches du chantier 2
 
@@ -235,4 +324,16 @@ sur un port libre, ou utilisent `IRC_BASE_URL`.
 - [x] Modèle des salons et utilisateurs : préfixes, `NAMES`, `JOIN`, `PART`, `KICK`, `QUIT`, `NICK`, `TOPIC`, `MODE`, `AWAY`, `ACCOUNT`.
 - [x] Commandes de saisie `/join /part /msg /me /nick /topic /whois /away /quit /query /raw`.
 - [x] Tests xUnit.
-- [ ] Branchement à l'interface : chantiers 3 et 4 (le chantier 1 n'était pas fusionné quand le chantier 2 s'est terminé).
+- [x] Branchement à l'interface : fait au chantier 4 (avec le réseau de démonstration) ; les vrais transports viennent au chantier 3.
+
+## Tâches du chantier 4
+
+- [x] Une session par réseau qui tient un `IrcClient` ; fabrique de transports (`IIrcTransportFactory`) que le chantier 3 complète.
+- [x] Réseau de démonstration en mémoire (`Kazo.Irc.Demo`), seulement avec `IrcDemoNetwork` (Debug, E2E de la CI), jamais dans le paquet du Store.
+- [x] Liste des réseaux et conversations, vue des messages (heure, pseudo, `/me`, avis, lignes du serveur), utilisateurs avec préfixes.
+- [x] Saisie : commandes de la décision 18 par `ExecuteAsync`, historique (↑/↓), complétion des pseudos (Tab) ; ordinateur et mobile.
+- [x] Fermer la fenêtre envoie `QUIT` (décision 8).
+- [x] Mentions et messages privés : notification de l'OS et son sans le focus, titre « (N) IRC », pastilles de non-lus et de mentions (décision 14).
+- [x] Journaux par jour dans `~/.local/share/ca.kazo.irc/logs/`, noms sûrs, option `logsEnabled` (décision 15).
+- [x] Capacités `notifications.post`, `filesystem.user-home.read` et `.write`.
+- [x] Tests xUnit et Playwright ; docs (fr, en), avancement du plan.

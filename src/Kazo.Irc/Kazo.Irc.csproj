@@ -14,6 +14,22 @@
   </PropertyGroup>
 
   <!--
+    The demonstration network (work item 4): an IRC server in memory, to try and test the chat with
+    no real network. On by default in Debug; the CI's end-to-end build turns it on in Release with
+    -p:IrcDemoNetwork=true. Never in the Store: the Store and the packaging build Release without it,
+    so the package has neither Kazo.Irc.Demo nor the code under IRC_DEMO.
+  -->
+  <PropertyGroup>
+    <IrcDemoNetwork Condition="'$(IrcDemoNetwork)' == '' and '$(Configuration)' == 'Debug'">true</IrcDemoNetwork>
+    <DefineConstants Condition="'$(IrcDemoNetwork)' == 'true'">$(DefineConstants);IRC_DEMO</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kazo.Irc.Protocol\Kazo.Irc.Protocol.csproj" />
+    <ProjectReference Include="..\Kazo.Irc.Demo\Kazo.Irc.Demo.csproj" Condition="'$(IrcDemoNetwork)' == 'true'" />
+  </ItemGroup>
+
+  <!--
     $(KazoOsVersion) comes from the submodule (Directory.Build.props). In Debug these references
     become the submodule's projects (ADR 0176 §4).
   -->

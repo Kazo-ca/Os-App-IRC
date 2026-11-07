@@ -65,4 +65,27 @@ public sealed class IrcSettingsTests
         MemoryFileSystem files = new() { WriteFailure = new IOException("disk full") };
         await Assert.ThrowsAsync<IOException>(() => new IrcSettings(true).SaveAsync(files, Home));
     }
+
+    [Fact]
+    public async Task The_logs_are_on_by_default_even_in_a_file_written_before_them()
+    {
+        MemoryFileSystem files = new();
+        files.Files[SettingsPath] = Encoding.UTF8.GetBytes("{ \"monospaceFont\": true }");
+
+        IrcSettings settings = await IrcSettings.LoadAsync(files, Home);
+
+        Assert.True(settings.MonospaceFont);
+        Assert.True(settings.LogsEnabled);
+        Assert.True(new IrcSettings().LogsEnabled);
+    }
+
+    [Fact]
+    public async Task Turning_the_logs_off_is_kept_between_runs()
+    {
+        MemoryFileSystem files = new();
+        await new IrcSettings(LogsEnabled: false).SaveAsync(files, Home);
+
+        Assert.Contains("\"logsEnabled\": false", Encoding.UTF8.GetString(files.Files[SettingsPath]));
+        Assert.False((await IrcSettings.LoadAsync(files, Home)).LogsEnabled);
+    }
 }

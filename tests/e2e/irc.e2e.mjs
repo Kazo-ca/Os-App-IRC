@@ -1,5 +1,5 @@
 // End-to-end runs of the IRC app inside the Kazo OS host: `npm run test:e2e` after
-// `dotnet build Kazo.Irc.slnx -c Release`. Each test boots a fresh browser profile.
+// `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true`. Each test boots a fresh browser profile.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium, devices } from 'playwright';

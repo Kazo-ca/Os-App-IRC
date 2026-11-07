@@ -11,7 +11,8 @@ namespace Kazo.Irc;
 /// own folder for its settings (<c>~/.config/ca.kazo.irc/settings.json</c>). Each later work item
 /// adds the capabilities its code uses, as the plan lists them: <c>network.real.access</c> and the
 /// real ports with the connection (work item 3, after Kazo OS ADR 0235 §3), the notifications and
-/// the logs (work item 4), opening a web address in the Browser (work item 5).
+/// the logs (work item 4, done: <c>notifications.post</c>, <c>filesystem.user-home.read</c> and
+/// <c>.write</c>), opening a web address in the Browser (work item 5).
 /// </remarks>
 [AppManifest]
 public sealed class IrcApp : AppDefinition
@@ -62,6 +63,15 @@ public sealed class IrcApp : AppDefinition
         // item 3, networks.json.
         AppCapabilities.FileSystemPrivateRead,
         AppCapabilities.FileSystemPrivateWrite,
+
+        // Work item 4, decision 14: a mention or a private message while the window does not have
+        // the focus posts an OS notification (which plays the notification sound).
+        AppCapabilities.NotificationsPost,
+
+        // Work item 4, decision 15: the logs in ~/.local/share/ca.kazo.irc/logs/, in the user's
+        // home, where the user can read them with the other apps.
+        AppCapabilities.FileSystemUserHomeRead,
+        AppCapabilities.FileSystemUserHomeWrite,
     ];
 
     /// <inheritdoc />

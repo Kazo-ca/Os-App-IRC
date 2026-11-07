@@ -2,7 +2,7 @@ using Kazo.Irc.Settings;
 
 namespace Kazo.Irc.Tests.Settings;
 
-/// <summary>An <see cref="IIrcFileSystem"/> in memory, with a switch that makes every write fail.</summary>
+/// <summary>An <see cref="IIrcFileSystem"/> in memory, with switches that make every read or write fail.</summary>
 internal sealed class MemoryFileSystem : IIrcFileSystem
 {
     /// <summary>Gets the files, by full path.</summary>
@@ -37,5 +37,31 @@ internal sealed class MemoryFileSystem : IIrcFileSystem
 
         Files[path] = bytes;
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task AppendAllTextAsync(string path, string text, CancellationToken cancellationToken)
+    {
+        if (WriteFailure is not null)
+        {
+            throw WriteFailure;
+        }
+
+        lock (Files)
+        {
+            byte[] before = Files.TryGetValue(path, out byte[]? existing) ? existing : [];
+            Files[path] = [.. before, .. System.Text.Encoding.UTF8.GetBytes(text)];
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Reads a file as UTF-8 text.</summary>
+    public string Text(string path)
+    {
+        lock (Files)
+        {
+            return System.Text.Encoding.UTF8.GetString(Files[path]);
+        }
     }
 }

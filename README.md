@@ -8,8 +8,11 @@ the optional Kazo OS server's relay (TCP with TLS) to networks that do not accep
 
 **State:** in development (series `irc/base`). The IRC protocol library is written (work item 2),
 and the app opens in Kazo OS with its layout (three columns on a computer, one column with side
-panels on a phone) and the console font option (work item 1); the connection comes with the next
-work items (see the plan's progress table).
+panels on a phone) and the console font option (work item 1). The chat is wired to the window
+(work item 4): in a Debug build the "Kazo Demo" network, an IRC server inside the app, shows the
+conversations, mentions with OS notifications and the "(N) IRC" title, and the daily logs in
+`~/.local/share/ca.kazo.irc/logs/`. The real networks come with work item 3 (see the plan's
+progress table).
 
 - Plan: [English](doc/en/plan.md) · [Français](doc/fr/plan.md)
 - Architecture of the code: [English](doc/en/architecture.md) · [Français](doc/fr/architecture.md)
@@ -30,7 +33,7 @@ from nuget.org (what CI and the Kazo OS Store build).
 ## Tests
 
 ```bash
-dotnet build Kazo.Irc.slnx -c Release
+dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true   # the E2E tests use the demonstration network
 dotnet test Kazo.Irc.slnx -c Release --no-build
 npm ci && npx playwright install chromium
 npm run test:e2e                            # the app in the Kazo OS host, desktop and phone

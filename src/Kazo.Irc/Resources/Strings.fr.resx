@@ -60,4 +60,127 @@
   <data name="Users" xml:space="preserve">
     <value>Utilisateurs</value>
   </data>
+  <data name="CommandPlaceholder" xml:space="preserve">
+    <value>Tapez une commande, par exemple /join #kazo</value>
+  </data>
+  <data name="MessageTo" xml:space="preserve">
+    <value>Message à {0}</value>
+  </data>
+  <data name="ConnectTo" xml:space="preserve">
+    <value>Se connecter à {0}</value>
+  </data>
+  <data name="CloseConversation" xml:space="preserve">
+    <value>Fermer {0}</value>
+  </data>
+  <data name="UnreadCount" xml:space="preserve">
+    <value>{0} non lus</value>
+  </data>
+  <data name="HighlightCount" xml:space="preserve">
+    <value>{0} pour vous</value>
+  </data>
+  <data name="TalkPrivately" xml:space="preserve">
+    <value>Parler en privé avec {0}</value>
+  </data>
+  <data name="Logs" xml:space="preserve">
+    <value>Journaux</value>
+  </data>
+  <data name="LogsHint" xml:space="preserve">
+    <value>Écrire les conversations dans ~/.local/share/ca.kazo.irc/logs</value>
+  </data>
+  <data name="LogsFailed" xml:space="preserve">
+    <value>Les journaux n’ont pas pu être écrits : {0}</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Connexion à {0}...</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Connecté sous le pseudo {0}.</value>
+  </data>
+  <data name="Reconnecting" xml:space="preserve">
+    <value>Connexion perdue. Nouvel essai dans {0} s (essai {1}).</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Déconnecté.</value>
+  </data>
+  <data name="Whois" xml:space="preserve">
+    <value>{0} est {1} ({2}), sur {3}. Salons : {4}</value>
+  </data>
+  <data name="WhoisUnknown" xml:space="preserve">
+    <value>{0} : ce pseudo n’existe pas.</value>
+  </data>
+  <data name="MentionTitle" xml:space="preserve">
+    <value>{0} dans {1}</value>
+  </data>
+  <data name="PrivateTitle" xml:space="preserve">
+    <value>{0} (privé)</value>
+  </data>
+  <data name="InputUnknownCommand" xml:space="preserve">
+    <value>Commande inconnue : {0}</value>
+  </data>
+  <data name="InputMissingArgument" xml:space="preserve">
+    <value>Il manque un argument à cette commande.</value>
+  </data>
+  <data name="InputNoConversation" xml:space="preserve">
+    <value>Ouvrez un salon ou une conversation pour écrire un message, ou tapez une commande.</value>
+  </data>
+  <data name="InputNotAChannel" xml:space="preserve">
+    <value>Cette commande se tape dans un salon.</value>
+  </data>
+  <data name="InputNotConnected" xml:space="preserve">
+    <value>Le réseau n’est pas connecté.</value>
+  </data>
+  <data name="InputRefused" xml:space="preserve">
+    <value>La ligne n’a pas pu être envoyée.</value>
+  </data>
+  <data name="ActivityJoin" xml:space="preserve">
+    <value>{0} est arrivé</value>
+  </data>
+  <data name="ActivityPart" xml:space="preserve">
+    <value>{0} est parti</value>
+  </data>
+  <data name="ActivityPartReason" xml:space="preserve">
+    <value>{0} est parti ({1})</value>
+  </data>
+  <data name="ActivityKick" xml:space="preserve">
+    <value>{2} a été expulsé par {0}</value>
+  </data>
+  <data name="ActivityKickReason" xml:space="preserve">
+    <value>{2} a été expulsé par {0} ({1})</value>
+  </data>
+  <data name="ActivityQuit" xml:space="preserve">
+    <value>{0} a quitté le réseau</value>
+  </data>
+  <data name="ActivityQuitReason" xml:space="preserve">
+    <value>{0} a quitté le réseau ({1})</value>
+  </data>
+  <data name="ActivityNick" xml:space="preserve">
+    <value>{0} s’appelle maintenant {1}</value>
+  </data>
+  <data name="ActivityTopic" xml:space="preserve">
+    <value>{0} a changé le sujet : {1}</value>
+  </data>
+  <data name="ActivityMode" xml:space="preserve">
+    <value>{0} change les modes : {1}</value>
+  </data>
+  <data name="ActivityAway" xml:space="preserve">
+    <value>{0} est absent</value>
+  </data>
+  <data name="ActivityAwayReason" xml:space="preserve">
+    <value>{0} est absent ({1})</value>
+  </data>
+  <data name="ActivityBack" xml:space="preserve">
+    <value>{0} est de retour</value>
+  </data>
+  <data name="StateConnected" xml:space="preserve">
+    <value>Connecté</value>
+  </data>
+  <data name="StateConnecting" xml:space="preserve">
+    <value>Connexion en cours</value>
+  </data>
+  <data name="StateReconnecting" xml:space="preserve">
+    <value>Reconnexion</value>
+  </data>
+  <data name="StateDisconnected" xml:space="preserve">
+    <value>Déconnecté</value>
+  </data>
 </root>

@@ -43,9 +43,11 @@ jobs:
         run: bash .github/scripts/check-kazoos-submodule.sh
 
       # The Release profile: Kazo OS packages from nuget.org, at the submodule's version. This is
-      # what the Kazo OS Store compiles.
-      - name: Build (Release, packages)
-        run: dotnet build Kazo.Irc.slnx -c Release
+      # what the Kazo OS Store compiles. IrcDemoNetwork adds the demonstration network (an IRC
+      # server in memory) that the end-to-end tests talk to; the Store and the packages are built
+      # without it.
+      - name: Build (Release, packages, with the demonstration network)
+        run: dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true
 
       - name: C# unit tests
         run: dotnet test Kazo.Irc.slnx -c Release --no-build

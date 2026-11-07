@@ -7,13 +7,17 @@ namespace Kazo.Irc.Settings;
 /// <summary>
 /// The app's settings, in <c>~/.config/ca.kazo.irc/settings.json</c> (the "Settings" row of
 /// doc/en/plan.md). Work item 1 brings the console font (decision 19); work item 4 adds the logs
-/// and the notifications.
+/// (decision 15).
 /// </summary>
 /// <param name="MonospaceFont">
 /// Whether the messages, the channel and user lists use the OS's monospace font, for a console
 /// look (decision 19). Off by default: the app follows the OS theme's interface font.
 /// </param>
-public sealed record IrcSettings(bool MonospaceFont = false)
+/// <param name="LogsEnabled">
+/// Whether the conversations are written to <c>~/.local/share/ca.kazo.irc/logs/</c> (decision 15).
+/// On by default; a file written before work item 4 has no such field and keeps them on.
+/// </param>
+public sealed record IrcSettings(bool MonospaceFont = false, bool LogsEnabled = true)
 {
     /// <summary>Gets the settings file of one user.</summary>
     /// <param name="homeDirectory">The user's home, for example <c>/home/neo</c>.</param>

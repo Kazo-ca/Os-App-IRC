@@ -1,5 +1,5 @@
 // Test harness of the end-to-end runs: starts the IRC host (src/Kazo.Irc.Os, built beforehand with
-// `dotnet build -c Release`, or the configuration named by IRC_CONFIGURATION) on a free port, or
+// `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true`, or the configuration named by IRC_CONFIGURATION) on a free port, or
 // uses IRC_BASE_URL when it points to one already running, and boots a fresh Kazo OS profile.
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
@@ -88,3 +88,49 @@ export async function openIrc(page, { mobile = false } = {}) {
  * @param {import('playwright').Page} page The page.
  */
 export const ircOsWindow = page => page.locator('[data-window-id]', { has: page.locator('.irc-window') });
+
+/**
+ * Opens an app from the Applications menu of the desktop.
+ * @param {import('playwright').Page} page The page.
+ * @param {string} name The app's name in the menu.
+ */
+export async function openApp(page, name) {
+    await page.getByText('Applications', { exact: true }).click();
+    await page.getByText(name, { exact: true }).first().click();
+}
+
+/**
+ * Types one command in a new Terminal window (which takes the focus from the other windows).
+ * @param {import('playwright').Page} page The page.
+ * @param {string} command The command line.
+ */
+export async function runInTerminal(page, command) {
+    await openApp(page, 'Terminal');
+    const input = page.locator('.xterm-helper-textarea').first();
+    await input.waitFor({ state: 'attached', timeout: 30_000 });
+    // The shell prints its banner and prompt first.
+    await page.locator('.xterm-rows').getByText('neo@', { exact: false }).first().waitFor({ timeout: 30_000 });
+    await input.focus();
+    await page.keyboard.type(`${command}\n`, { delay: 5 });
+}
+
+/**
+ * Connects the IRC window to the demonstration network (built with -p:IrcDemoNetwork=true) and
+ * waits for the registration.
+ * @param {import('playwright').Page} page The page, with the IRC window open.
+ */
+export async function connectDemo(page) {
+    await page.locator('.channel-connect', { hasText: 'Kazo Demo' }).click();
+    await page.locator('.message-line', { hasText: 'Connected as' }).waitFor({ timeout: 30_000 });
+}
+
+/**
+ * Types a line in the IRC input and sends it with Enter.
+ * @param {import('playwright').Page} page The page.
+ * @param {string} text The line.
+ */
+export async function say(page, text) {
+    const input = page.getByRole('textbox', { name: 'Message' });
+    await input.fill(text);
+    await input.press('Enter');
+}
