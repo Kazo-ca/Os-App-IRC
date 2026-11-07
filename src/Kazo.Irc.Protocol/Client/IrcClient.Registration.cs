@@ -130,7 +130,7 @@ public sealed partial class IrcClient
     /// <summary>Asks for the wanted capabilities among <paramref name="offered"/>; ends CAP when there is none to ask during registration.</summary>
     private async Task RequestCapabilitiesAsync(IEnumerable<string> offered, CancellationToken cancellationToken)
     {
-        var offeredSet = offered.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var offeredSet = new HashSet<string>(offered, StringComparer.OrdinalIgnoreCase);
         var wanted = Options.Capabilities
             .Where(c => offeredSet.Contains(c) && !_enabledCaps.Contains(c))
             .Where(c => !c.Equals("sasl", StringComparison.OrdinalIgnoreCase) || CanUseSasl())

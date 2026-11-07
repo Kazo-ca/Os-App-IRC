@@ -28,4 +28,18 @@
   </PropertyGroup>
 
   <Import Project="$(KazoOsSourceRoot)build/Versions.props" Condition="Exists('$(KazoOsSourceRoot)build/Versions.props')" />
+
+  <!--
+    The IRC app's two build switches, seen by every project (doc/en/architecture.md):
+      IrcDemoNetwork     the demonstration network (Kazo.Irc.Demo, an IRC server in memory): on by
+                         default in Debug; the CI's end-to-end build sets it in Release. Never in
+                         the Store.
+      IrcSingleAssembly  the Store build (Release without the demonstration network): the
+                         protocol's sources are compiled into Kazo.Irc.dll, because Kazo OS 3.2.0
+                         packs and loads only the app's declared assembly (Kazo-ca/Os#419).
+  -->
+  <PropertyGroup>
+    <IrcDemoNetwork Condition="'$(IrcDemoNetwork)' == '' and ('$(Configuration)' == '' or '$(Configuration)' == 'Debug')">true</IrcDemoNetwork>
+    <IrcSingleAssembly Condition="'$(IrcSingleAssembly)' == '' and '$(IrcDemoNetwork)' != 'true'">true</IrcSingleAssembly>
+  </PropertyGroup>
 </Project>

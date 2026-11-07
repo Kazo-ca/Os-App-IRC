@@ -30,13 +30,16 @@ public static class IrcCaseFolding
     public static string Fold(string name, IrcCaseMapping mapping)
     {
         ArgumentNullException.ThrowIfNull(name);
-        return string.Create(name.Length, (name, mapping), static (span, state) =>
+
+        // A char array, not string.Create with a SpanAction: the trimmed Kazo OS runtime that runs
+        // an installed app has no System.Buffers.SpanAction (kazopkg refuses the package).
+        var folded = new char[name.Length];
+        for (var i = 0; i < folded.Length; i++)
         {
-            for (var i = 0; i < span.Length; i++)
-            {
-                span[i] = FoldChar(state.name[i], state.mapping);
-            }
-        });
+            folded[i] = FoldChar(name[i], mapping);
+        }
+
+        return new string(folded);
     }
 
     /// <summary>True when the two names are the same name for the server.</summary>

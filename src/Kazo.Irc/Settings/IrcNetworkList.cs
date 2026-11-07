@@ -175,7 +175,7 @@ public static class IrcNetworkList
             slug = "network";
         }
 
-        var taken = others.Select(other => other.Id).ToHashSet(StringComparer.Ordinal);
+        var taken = new HashSet<string>(others.Select(other => other.Id), StringComparer.Ordinal);
         var id = slug;
         for (var n = 2; taken.Contains(id); n++)
         {

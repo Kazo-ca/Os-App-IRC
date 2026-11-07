@@ -26,9 +26,12 @@ Os-App-IRC/
 ├─ tests/
 │  ├─ Kazo.Irc.Tests/        # C# unit tests of the app (xUnit)
 │  ├─ Kazo.Irc.Protocol.Tests/ # xUnit tests of the protocol
-│  └─ e2e/                   # runs in the host (node --test + Playwright)
+│  ├─ e2e/                   # runs in the host (node --test + Playwright), fake IRC WebSocket server
+│  ├─ installed/             # the app installed as a package in a published Kazo OS (work item 6)
+│  └─ store/                 # screenshots of the Store listing (work item 6)
+├─ store/                    # Kazo OS Store listing: icon, descriptions, screenshots, store.json
 ├─ .github/workflows/        # ci.yml, publish-*.yml, tag-release.yml
-└─ package.json              # end-to-end test tools
+└─ package.json              # tools of the end-to-end tests, screenshots and installed app
 ```
 
 The repository follows the output of the Kazo OS 3.0.0 **`kazoos-solution`**
@@ -389,6 +392,66 @@ branches.
 dotnet test Kazo.Irc.slnx
 ```
 
+## Kazo OS Store listing and installed app (work item 6)
+
+The `store/` folder is the Kazo OS Store listing (catalog format:
+`doc/en/catalog-format.md` of Kazo-ca/Os-AppMarketPlace): `icon.png` (256×256,
+rendered from `wwwroot/icons/app.svg`), `short_description.{fr,en}.txt`,
+`description.{fr,en}.md` (WebSocket without any server with UnrealIRCd proposed,
+Libera.Chat and OFTC through the Kazo server, an option always offered and tried
+on demand, the administrator's approval at the first launch with the ports
+`tcp/6697` and `tcp/6667`, logs in `~/.local/share/ca.kazo.irc/logs/`, limits of
+the first version, license), `screenshots/1.png` to `3.png` (a channel on a
+computer, "Manage networks", a phone with the console font) and `store.json`
+(category `communication`). The screenshots are taken in the host built as the
+Store builds it (`dotnet build src/Kazo.Irc.Os -c Release`, without the
+demonstration network) by `npm run store:screenshots`
+(`tests/store/screenshots.mjs`); `wss://irc.unrealircd.org/` is played there by
+the tests' fake server (`tests/e2e/fake-irc-server.mjs`), the people and lines
+are made up. The catalog tool (`Kazo.Os.MarketPlace.Tool validate` and
+`check-package`) accepts the folder assembled as `publish-to-kazoos-store.yml`
+does once it moves to Kazo OS 3.2.0
+([Kazo-ca/Os-AppMarketPlace#17](https://github.com/Kazo-ca/Os-AppMarketPlace/pull/17)):
+on 3.0.0, its strict reading refused `realNetworkPorts`.
+
+`npm run test:installed -- <Kazo OS wwwroot> <packages folder>`
+(`tests/installed/install-and-chat.mjs`) checks IRC as the Store installs it,
+in the published and trimmed Kazo OS 3.2.0 (`dotnet publish
+OS/Kazo.Os.Ecosystem -c Release` of the submodule): `sudo kazopkg install` (API
+check included), launch from the launcher, approval of `network.real.access`
+listing both ports, scoped CSS linked, no "Kazo Demo" network, the "Kazo server
+required" note, connection to UnrealIRCd over WebSocket (fake server), `/join`,
+send and receive, the clear message for Libera.Chat without a Kazo server, no
+console error. It found three things:
+
+1. **One assembly per package.** Kazo OS 3.2.0 packs and loads only the app's
+   declared assembly, not its libraries: `kazopkg` refused IRC ("uses APIs this
+   OS does not have: assembly Kazo.Irc.Protocol"). Issue
+   [Kazo-ca/Os#419](https://github.com/Kazo-ca/Os/issues/419). Meanwhile, the
+   Store build (`IrcSingleAssembly`, in `Directory.Build.props`: Release without
+   `IrcDemoNetwork`) compiles the sources of `Kazo.Irc.Protocol` into
+   `Kazo.Irc.dll` instead of referencing it; the library stays a project of its
+   own, tested alone. The C# tests build with the demonstration network
+   (`Kazo.Irc.Tests` stops with a clear message otherwise: `Kazo.Irc.Demo` brings
+   `Kazo.Irc.Protocol.dll`, which would hold the same types). Remove when an OS
+   release fixes Os#419.
+2. **APIs missing from the trimmed runtime**: `System.Text.Rune`
+   (`EnumerateRunes`), `System.Buffers.SpanAction` (`string.Create` with a
+   state) and `Enumerable.ToHashSet(source)`. The protocol counts UTF-8 bytes by
+   hand (`IrcTextSplitter`), folds names in an array (`IrcCaseMapping`) and
+   creates its `HashSet`s with their constructor.
+3. **The icon answers 404 in the launcher** until the installed app has been
+   opened in the session (`wwwroot/` is published when the assembly loads):
+   issue [Kazo-ca/Os#420](https://github.com/Kazo-ca/Os/issues/420). The test
+   tolerates that exact 404 before the launch, then checks the icon answers 200
+   once IRC runs.
+
+Checked on 2026-11-07 with Kazo OS 3.2.0 (submodule `v3.2.0`, Release publish
+of `OS/Kazo.Os.Ecosystem`, .NET SDK 10.0.403) and the `KazoOsPack` package
+(`lib/Kazo.Irc.dll`, `lib/fr/Kazo.Irc.resources.dll`, `wwwroot/`, unsigned).
+The `v1.0.0` tag and the catalog PR come after the merge into `main`, through
+the "Tag a release" workflow.
+
 ## Tests
 
 | Suite | Command | Content |
@@ -396,6 +459,8 @@ dotnet test Kazo.Irc.slnx
 | Protocol (xUnit) | `dotnet test Kazo.Irc.slnx` | see "Protocol tests" above. |
 | C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifest (class and generated `manifest.json`, French texts, icon, capabilities), complete English and French texts, compact-mode panels, settings (path, defaults, broken or denied file, unknown field, failed write, logs option); chat on the demonstration server with a fake clock (connection, join, messages, mentions, private messages, unread, title counter, notifications with and without the focus, input problems, close, `QUIT`); mentions, default nickname, history, completion; logs (paths, hostile names, line format, time zone, option, failed write, codes removed); the demonstration server; links (punctuation, parentheses, refused schemes, tags and quotes from the network), segments and the styles' CSS classes, notification without codes; real networks (work item 3): WebSocket and relay factories (address, host, translation of each error), `networks.json` (proposed networks, broken or denied file, round trip without a password, unusable entries, checks, id, channels), the editor's fields and the SASL password, chat ("no Kazo server", a session opened again, a failure retried, SASL given to the client, the users and topic sent after the join redraw the window). Protocol: WebSocket (fake `WebSocket`) and stream (fake stream) transports, a permanent failure not retried, `MessageHandled` after the model update. |
 | End to end | `npm run test:e2e` after `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | in the host, fresh profile: three columns side by side on a computer in the OS theme; console font kept after closing and reopening; on a Pixel 7, one column and both panels; `chat.e2e.mjs`: connect to the demonstration network, `/join #kazo`, send and receive, history and Tab, a mention while the Terminal has the focus gives an OS notification and "(1) IRC", the log file read with `cat` in the Terminal, a private message counted, closing the window, the chat on a Pixel 7; `!links`: two links without the punctuation around them, bold, color and italics drawn, tags shown as text, a click opens the OS Browser on the address without leaving the page; `websocket.e2e.mjs` (work item 3): the administrator approves `network.real.access`, "Kazo server required" notes, a network added in the editor and connected over WebSocket to an IRC server played by the test (Playwright's `routeWebSocket`, no real network), automatic channel, send and receive; Libera.Chat without a Kazo server gives the clear message and "No Kazo server connected". The relay has no end-to-end run: the host is not a Kazo server. |
+| Installed app | `npm run test:installed -- <wwwroot> <packages>` | See "Kazo OS Store listing and installed app". Not in CI (publishing the OS takes about ten minutes). |
+| Store screenshots | `npm run store:screenshots` after `dotnet build src/Kazo.Irc.Os -c Release` | The three images of `store/screenshots/`. Not in CI. |
 
 The end-to-end tests start the host (`dotnet run --no-build -c Release`) on a
 free port, or use `IRC_BASE_URL`.
@@ -409,6 +474,7 @@ free port, or use `IRC_BASE_URL`.
 | 3. `irc/3-connect` | Real networks over WebSocket and through the Kazo server's relay, clear errors, `networks.json` and its editor, the SASL password in the keyring, submodule on v3.2.0 (the "Connecting to real networks" section above). |
 | 4. `irc/4-notifications-and-logs` | The chat wired to the window on the demonstration network, notifications and title counter, logs (the "Chat" section above). |
 | 5. `irc/5-links` | Clickable web addresses opened in the Browser, IRC formatting codes drawn or removed (the "Links and formatting" section above). |
+| 6. `irc/6-store` | Kazo OS Store listing, screenshots, the app installed by `kazopkg` checked, the protocol compiled into `Kazo.Irc.dll` for the package (Os#419), APIs of the trimmed runtime (the "Kazo OS Store listing and installed app" section above). |
 
 ## Work item 2 tasks
 
@@ -455,3 +521,13 @@ free port, or use `IRC_BASE_URL`.
 - [x] `!links` command of the demonstration bot.
 - [x] xUnit tests (formatting, links, segments, classes, logs, notifications) and Playwright (a click opens the Browser).
 - [x] Docs (fr, en), plan progress.
+
+## Work item 6 tasks
+
+- [x] `store/`: 256×256 icon, short and long descriptions (fr, en), `store.json` (category `communication`).
+- [x] Desktop and mobile screenshots (`tests/store/screenshots.mjs`, shared fake WebSocket server `tests/e2e/fake-irc-server.mjs`).
+- [x] Catalog tool: `validate` and `check-package` pass; the tool moves to Kazo OS 3.2.0 (Os-AppMarketPlace#17).
+- [x] App installed by `kazopkg` in the published and trimmed Kazo OS 3.2.0 (`tests/installed/install-and-chat.mjs`).
+- [x] One-assembly package (`IrcSingleAssembly`, Os#419); APIs missing from the trimmed runtime replaced; icon 404 before the launch (Os#420).
+- [x] The Store build has no demonstration network (checked by the installed-app run).
+- [x] Docs (fr, en), final READMEs, the plan's progress.

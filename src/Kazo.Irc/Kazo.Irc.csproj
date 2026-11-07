@@ -15,17 +15,27 @@
 
   <!--
     The demonstration network (work item 4): an IRC server in memory, to try and test the chat with
-    no real network. On by default in Debug; the CI's end-to-end build turns it on in Release with
-    -p:IrcDemoNetwork=true. Never in the Store: the Store and the packaging build Release without it,
-    so the package has neither Kazo.Irc.Demo nor the code under IRC_DEMO.
+    no real network. IrcDemoNetwork and IrcSingleAssembly are set in Directory.Build.props (on by
+    default in Debug; the CI's end-to-end build turns the network on in Release with
+    -p:IrcDemoNetwork=true). Never in the Store: the Store and the packaging build Release without
+    it, so the package has neither Kazo.Irc.Demo nor the code under IRC_DEMO.
   -->
   <PropertyGroup>
-    <IrcDemoNetwork Condition="'$(IrcDemoNetwork)' == '' and '$(Configuration)' == 'Debug'">true</IrcDemoNetwork>
     <DefineConstants Condition="'$(IrcDemoNetwork)' == 'true'">$(DefineConstants);IRC_DEMO</DefineConstants>
   </PropertyGroup>
 
+  <!--
+    IrcSingleAssembly (the Store build, Directory.Build.props): Kazo OS 3.2.0 packs and loads only
+    the app's declared assembly, not its own libraries (Kazo-ca/Os#419). The protocol's sources are
+    then compiled into Kazo.Irc.dll, so the package holds one assembly. Remove when an OS release
+    fixes Os#419. See doc/en/architecture.md, "Kazo OS Store listing and installed app".
+  -->
+  <ItemGroup Condition="'$(IrcSingleAssembly)' == 'true'">
+    <Compile Include="..\Kazo.Irc.Protocol\**\*.cs" Exclude="..\Kazo.Irc.Protocol\obj\**;..\Kazo.Irc.Protocol\bin\**" LinkBase="Protocol" />
+  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Kazo.Irc.Protocol\Kazo.Irc.Protocol.csproj" />
+    <ProjectReference Include="..\Kazo.Irc.Protocol\Kazo.Irc.Protocol.csproj" Condition="'$(IrcSingleAssembly)' != 'true'" />
     <ProjectReference Include="..\Kazo.Irc.Demo\Kazo.Irc.Demo.csproj" Condition="'$(IrcDemoNetwork)' == 'true'" />
   </ItemGroup>
 

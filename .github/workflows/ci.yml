@@ -60,3 +60,21 @@ jobs:
 
       - name: End-to-end tests
         run: npm run test:e2e
+
+      # The Store build (Release without the demonstration network, IrcSingleAssembly): Kazo OS 3.2.0
+      # packs and loads one assembly per app (Kazo-ca/Os#419), so the package must hold exactly
+      # lib/Kazo.Irc.dll. Last step: it rebuilds src/Kazo.Irc without the demonstration network.
+      - name: Pack as the Kazo OS Store builds it
+        run: |
+          dotnet build src/Kazo.Irc -c Release -t:KazoOsPack -p:KazoOsPackageOutput="$RUNNER_TEMP/packages"
+          package=$(ls "$RUNNER_TEMP"/packages/*/*.kazoapp)
+          unzip -Z1 "$package"
+          libraries=$(unzip -Z1 "$package" | grep -E '^lib/[^/]+\.dll$' || true)
+          if [[ "$libraries" != "lib/Kazo.Irc.dll" ]]; then
+            echo "::error::The package must hold only lib/Kazo.Irc.dll (Kazo-ca/Os#419), it holds: $libraries"
+            exit 1
+          fi
+          if unzip -Z1 "$package" | grep -q 'Kazo.Irc.Demo'; then
+            echo "::error::The Store package holds the demonstration network."
+            exit 1
+          fi
