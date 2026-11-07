@@ -204,4 +204,25 @@ public sealed class ChatTests
         Assert.Contains(harness.Errors, e => e.Code == "401" && e.Message == "ghost No such nick/channel");
         Assert.Contains(harness.Errors, e => e.Code == "ERROR" && e.Message == "Closing link");
     }
+
+    [Fact]
+    public async Task An_own_message_is_announced_before_it_is_written()
+    {
+        await using var harness = new ClientHarness();
+        await harness.RegisterAsync();
+        var writtenWhenAnnounced = true;
+        harness.Client.ChatMessage += (_, chat) =>
+        {
+            if (chat.IsOwn)
+            {
+                writtenWhenAnnounced = harness.Transport.SentLines.Any(line => line.StartsWith("PRIVMSG #kazo", StringComparison.Ordinal));
+            }
+        };
+
+        await harness.Client.SendMessageAsync("#kazo", "hello");
+
+        // An answer the server sends at once can never be shown before the line it answers.
+        Assert.False(writtenWhenAnnounced);
+        Assert.Contains("PRIVMSG #kazo hello", harness.Transport.SentLines);
+    }
 }

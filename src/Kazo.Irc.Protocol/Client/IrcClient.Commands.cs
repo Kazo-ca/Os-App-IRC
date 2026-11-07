@@ -158,9 +158,19 @@ public sealed partial class IrcClient
         foreach (var piece in pieces)
         {
             var payload = kind == IrcChatMessageKind.Action ? IrcCtcp.Format(IrcCtcp.Action, piece) : piece;
-            await SendAsync(new IrcMessage(command, target, payload), cancellationToken).ConfigureAwait(false);
+            var message = new IrcMessage(command, target, payload);
+            // Refused before it is shown: a line that cannot be written, or no connection.
+            _ = message.Format();
+            if (_transport is null)
+            {
+                throw new InvalidOperationException("The IRC client is not connected.");
+            }
+
+            // The own line is announced before it is written: an answer the server sends at once
+            // (read by the other loop) then always comes after it, in the window and in the logs.
             ChatMessage?.Invoke(this, new IrcChatMessage(
                 Now, kind, self, target, conversation, piece, ChannelOf(target) is null, IsOwn: true, new Dictionary<string, string>()));
+            await SendAsync(message, cancellationToken).ConfigureAwait(false);
         }
     }
 
