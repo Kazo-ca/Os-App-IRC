@@ -178,6 +178,7 @@ commands (`421`). Its bot, `kazo-bot`:
 | a channel message that names it | answers at once and names you (a mention) |
 | `!mention N` in a channel | names you in that channel N seconds later (3 by default, 60 at most) |
 | `!private N` in a channel | sends you a private message N seconds later |
+| `!links` in a channel | sends two web addresses, bold, colored and italic text, and text that looks like HTML (work item 5) |
 | a private message to it | answers privately |
 
 It is offered as "Kazo Demo" only when the app is built with
@@ -187,6 +188,27 @@ end-to-end tests. Then `Kazo.Irc` references `Kazo.Irc.Demo` and defines
 `IRC_DEMO` (`Chat/DemoNetwork.cs`, `Chat/IrcNetworks.cs`). The Store and the
 packages build Release without it: the package has neither `Kazo.Irc.Demo.dll`
 nor the demo code.
+
+## Links and formatting (work item 5)
+
+The text of a line (message, action, notice, activity, the channel topic in the
+toolbar) goes through the `Components/MessageText.razor` component, which draws
+the IRC formatting codes and makes web addresses clickable (decision 17).
+
+| Part | Role |
+| --- | --- |
+| `IrcFormatting` (`Kazo.Irc.Protocol/Text`) | Reads the codes `\x02` bold, `\x1D` italics, `\x1F` underline, `\x1E` strikethrough, `\x11` monospace, `\x16` reverse, `\x0F` reset, `\x03` mIRC color (`fg[,bg]`, one or two digits, 99 = default) and `\x04` hexadecimal color, into runs of text sharing a style (`IrcTextRun`, `IrcTextStyle`). `Strip` removes the codes. |
+| `MessageLinks` (`Kazo.Irc/Text`) | Finds `http://` and `https://` addresses: not inside a word, ending at the first blank or `< > " \` { } \| ^` character, without the sentence's trailing punctuation (`. , ; : ! ? ' " * …` and quotes) nor a closing parenthesis or bracket with no opening one in the address (`(https://kazo.ca)`, while `…/IRC_(protocol)` keeps its own). Only `http` and `https` become links: never `javascript:`, `data:`, `file:`; `irc://` waits for [#2](https://github.com/Kazo-ca/Os-App-IRC/issues/2). |
+| `MessageSegments` (`Kazo.Irc/Text`) | Puts both together: the style runs cut at the links' edges; a link whose style changes midway stays one link. |
+| `MessageText` | Each run is a text node (Razor encodes it): nothing from the network becomes HTML, `<b>` is shown as typed. A link is an `<a href>` to the escaped absolute address (`Uri.AbsoluteUri`), `rel="noopener noreferrer nofollow"`; the click is intercepted (`preventDefault`) and handed to the window. Styles are classes of `MessageText.razor.css` (`irc-b`, `irc-fg-4`, `irc-bg-1`…), never inline styles (ADR 0007): the 16 standard mIRC colors are drawn; extended (16 to 98) and hexadecimal colors keep the default colors. |
+| `IrcWindow.OpenLinkAsync` | Opens the address in a new window of the OS Browser (`KazoBrowser.OpenAsync`, capability `apps.launch`); a failure is shown in the status bar. |
+
+The codes are also removed where the text must be plain: log lines,
+notification text, the nickname search for mentions, and the topic's tooltip.
+
+On the Browser's first launch in a fresh profile, Kazo OS 3.0.0 asks the
+administrator to approve **the Browser's** `network.real.access` capability (not
+IRC's); the end-to-end test approves it.
 
 ## Protocol (`Kazo.Irc.Protocol`)
 
@@ -281,7 +303,7 @@ fits in 512 bytes; before it knows its host, the client assumes the longest one
 ### Protocol tests
 
 `tests/Kazo.Irc.Protocol.Tests` (xUnit, `Microsoft.Extensions.TimeProvider.Testing`
-for the fake clock): messages and tags, encoding, cutting lines and texts, CTCP,
+for the fake clock): messages and tags, encoding, cutting lines and texts, CTCP, formatting codes,
 `CASEMAPPING`, ISUPPORT, input, and the client on `FakeIrcTransport`: CAP, SASL,
 nick taken, channels, modes, topics, away, messages, CTCP, WHOIS, commands,
 `QUIT`, reconnection, `PING`. Protocol coverage: 97 % of lines, 91 % of
@@ -296,8 +318,8 @@ dotnet test Kazo.Irc.slnx
 | Suite | Command | Content |
 | --- | --- | --- |
 | Protocol (xUnit) | `dotnet test Kazo.Irc.slnx` | see "Protocol tests" above. |
-| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifest (class and generated `manifest.json`, French texts, icon, capabilities), complete English and French texts, compact-mode panels, settings (path, defaults, broken or denied file, unknown field, failed write, logs option); chat on the demonstration server with a fake clock (connection, join, messages, mentions, private messages, unread, title counter, notifications with and without the focus, input problems, close, `QUIT`); mentions, default nickname, history, completion; logs (paths, hostile names, line format, time zone, option, failed write); the demonstration server. |
-| End to end | `npm run test:e2e` after `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | in the host, fresh profile: three columns side by side on a computer in the OS theme; console font kept after closing and reopening; on a Pixel 7, one column and both panels; `chat.e2e.mjs`: connect to the demonstration network, `/join #kazo`, send and receive, history and Tab, a mention while the Terminal has the focus gives an OS notification and "(1) IRC", the log file read with `cat` in the Terminal, a private message counted, closing the window, the chat on a Pixel 7. |
+| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifest (class and generated `manifest.json`, French texts, icon, capabilities), complete English and French texts, compact-mode panels, settings (path, defaults, broken or denied file, unknown field, failed write, logs option); chat on the demonstration server with a fake clock (connection, join, messages, mentions, private messages, unread, title counter, notifications with and without the focus, input problems, close, `QUIT`); mentions, default nickname, history, completion; logs (paths, hostile names, line format, time zone, option, failed write, codes removed); the demonstration server; links (punctuation, parentheses, refused schemes, tags and quotes from the network), segments and the styles' CSS classes, notification without codes. |
+| End to end | `npm run test:e2e` after `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | in the host, fresh profile: three columns side by side on a computer in the OS theme; console font kept after closing and reopening; on a Pixel 7, one column and both panels; `chat.e2e.mjs`: connect to the demonstration network, `/join #kazo`, send and receive, history and Tab, a mention while the Terminal has the focus gives an OS notification and "(1) IRC", the log file read with `cat` in the Terminal, a private message counted, closing the window, the chat on a Pixel 7; `!links`: two links without the punctuation around them, bold, color and italics drawn, tags shown as text, a click opens the OS Browser on the address without leaving the page. |
 
 The end-to-end tests start the host (`dotnet run --no-build -c Release`) on a
 free port, or use `IRC_BASE_URL`.
@@ -309,6 +331,7 @@ free port, or use `IRC_BASE_URL`.
 | 1. `irc/1-solution` | Solution, host, CI, manifest, icon, empty window and layout, console font, tests. |
 | 2. `irc/2-protocol` | The `Kazo.Irc.Protocol` library and its tests (the "Protocol" section above). |
 | 4. `irc/4-notifications-and-logs` | The chat wired to the window on the demonstration network, notifications and title counter, logs (the "Chat" section above). |
+| 5. `irc/5-links` | Clickable web addresses opened in the Browser, IRC formatting codes drawn or removed (the "Links and formatting" section above). |
 
 ## Work item 2 tasks
 
@@ -332,3 +355,13 @@ free port, or use `IRC_BASE_URL`.
 - [x] Logs per day in `~/.local/share/ca.kazo.irc/logs/`, safe names, `logsEnabled` option (decision 15).
 - [x] Capabilities `notifications.post`, `filesystem.user-home.read` and `.write`.
 - [x] xUnit and Playwright tests; docs (fr, en), plan progress.
+
+## Work item 5 tasks
+
+- [x] IRC formatting codes read into styles (`IrcFormatting`, protocol library) and removed in logs, notifications and the mention search.
+- [x] `http://` and `https://` addresses found without the trailing punctuation (`MessageLinks`).
+- [x] Drawn by `MessageText`: text only (no HTML from the network), intercepted `<a>` links, styles as CSS classes (16 mIRC colors).
+- [x] Click: a new window of the OS Browser (`KazoBrowser.OpenAsync`), capability `apps.launch`.
+- [x] `!links` command of the demonstration bot.
+- [x] xUnit tests (formatting, links, segments, classes, logs, notifications) and Playwright (a click opens the Browser).
+- [x] Docs (fr, en), plan progress.

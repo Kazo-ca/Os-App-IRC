@@ -244,4 +244,30 @@ public sealed class IrcChatTests
 
         public Protocol.Transport.IIrcTransport Create(IrcNetwork network) => new DemoIrcServer();
     }
+
+    [Fact]
+    public async Task A_notification_has_no_formatting_code()
+    {
+        await using var harness = new ChatHarness();
+        await harness.ConnectAsync();
+        harness.Chat.SetWindowActive(false);
+
+        await harness.Chat.SubmitAsync("/msg kazo-bot \u0002hi\u0002 \u000304there\u0003");
+        await ChatHarness.WaitUntilAsync(() => harness.Notifier.Posted.Count == 1);
+
+        Assert.Equal("You said: hi there", harness.Notifier.Posted[0].Message);
+    }
+
+    [Fact]
+    public async Task The_bot_sends_links_and_formatted_text_on_request()
+    {
+        await using var harness = new ChatHarness();
+        await harness.ConnectAsync();
+        var channel = await harness.JoinKazoAsync();
+
+        await harness.Chat.SubmitAsync("!links");
+        await ChatHarness.WaitUntilAsync(() => channel.Lines.Any(line => line.Nick == DemoIrcServer.BotNick));
+
+        Assert.Equal(DemoIrcServer.LinksMessage, channel.Lines.Single(line => line.Nick == DemoIrcServer.BotNick).Text);
+    }
 }

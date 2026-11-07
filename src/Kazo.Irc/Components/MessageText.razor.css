@@ -1,0 +1,199 @@
+/* The text of a message (work item 5): web links and the IRC formatting codes as classes. */
+.message-link {
+    color: var(--kos-link, var(--kos-info, #58a6ff));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.message-link:hover {
+    text-decoration-thickness: 2px;
+}
+
+.message-link:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: 1px;
+    border-radius: 2px;
+}
+
+.irc-b {
+    font-weight: 700;
+}
+
+.irc-i {
+    font-style: italic;
+}
+
+.irc-u {
+    text-decoration: underline;
+}
+
+.irc-s {
+    text-decoration: line-through;
+}
+
+.irc-u.irc-s {
+    text-decoration: underline line-through;
+}
+
+.irc-m {
+    font-family: var(--kos-font-mono, 'Consolas', monospace);
+}
+
+/* Reverse with no color: the window's own colors swapped. */
+.irc-fg-reverse {
+    color: var(--kos-bg-base, #0d1117);
+}
+
+.irc-bg-reverse {
+    background: var(--kos-text-primary, #e6edf3);
+}
+
+/*
+ * The sixteen standard mIRC colors (modern.ircdocs.horse/formatting). Hexadecimal and extended
+ * colors are drawn in the default colors: an app styles with classes, never inline (ADR 0007).
+ */
+
+/* 0: white */
+.irc-fg-0 {
+    color: #ffffff;
+}
+
+.irc-bg-0 {
+    background: #ffffff;
+}
+
+/* 1: black */
+.irc-fg-1 {
+    color: #000000;
+}
+
+.irc-bg-1 {
+    background: #000000;
+}
+
+/* 2: blue */
+.irc-fg-2 {
+    color: #00007f;
+}
+
+.irc-bg-2 {
+    background: #00007f;
+}
+
+/* 3: green */
+.irc-fg-3 {
+    color: #009300;
+}
+
+.irc-bg-3 {
+    background: #009300;
+}
+
+/* 4: red */
+.irc-fg-4 {
+    color: #ff0000;
+}
+
+.irc-bg-4 {
+    background: #ff0000;
+}
+
+/* 5: brown */
+.irc-fg-5 {
+    color: #7f0000;
+}
+
+.irc-bg-5 {
+    background: #7f0000;
+}
+
+/* 6: magenta */
+.irc-fg-6 {
+    color: #9c009c;
+}
+
+.irc-bg-6 {
+    background: #9c009c;
+}
+
+/* 7: orange */
+.irc-fg-7 {
+    color: #fc7f00;
+}
+
+.irc-bg-7 {
+    background: #fc7f00;
+}
+
+/* 8: yellow */
+.irc-fg-8 {
+    color: #ffff00;
+}
+
+.irc-bg-8 {
+    background: #ffff00;
+}
+
+/* 9: light green */
+.irc-fg-9 {
+    color: #00fc00;
+}
+
+.irc-bg-9 {
+    background: #00fc00;
+}
+
+/* 10: cyan */
+.irc-fg-10 {
+    color: #009393;
+}
+
+.irc-bg-10 {
+    background: #009393;
+}
+
+/* 11: light cyan */
+.irc-fg-11 {
+    color: #00ffff;
+}
+
+.irc-bg-11 {
+    background: #00ffff;
+}
+
+/* 12: light blue */
+.irc-fg-12 {
+    color: #0000fc;
+}
+
+.irc-bg-12 {
+    background: #0000fc;
+}
+
+/* 13: pink */
+.irc-fg-13 {
+    color: #ff00ff;
+}
+
+.irc-bg-13 {
+    background: #ff00ff;
+}
+
+/* 14: grey */
+.irc-fg-14 {
+    color: #7f7f7f;
+}
+
+.irc-bg-14 {
+    background: #7f7f7f;
+}
+
+/* 15: light grey */
+.irc-fg-15 {
+    color: #d2d2d2;
+}
+
+.irc-bg-15 {
+    background: #d2d2d2;
+}

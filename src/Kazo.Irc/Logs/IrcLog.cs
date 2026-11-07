@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Kazo.Irc.Chat;
 using Kazo.Irc.Protocol.Client;
+using Kazo.Irc.Protocol.Text;
 
 namespace Kazo.Irc.Logs;
 
@@ -101,5 +102,6 @@ public static class IrcLog
         };
     }
 
-    private static string OneLine(string text) => text.Replace('\r', ' ').Replace('\n', ' ');
+    /// <summary>One line of plain text: the IRC formatting codes removed (work item 5), line ends made spaces.</summary>
+    private static string OneLine(string text) => IrcFormatting.Strip(text).Replace('\r', ' ').Replace('\n', ' ');
 }

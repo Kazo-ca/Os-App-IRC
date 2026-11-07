@@ -22,7 +22,7 @@
                 <h1 class="irc-title">@(_chat.Selected?.Name ?? L["NoConversation"])</h1>
                 @if (_chat.Selected?.Channel?.Topic is { Length: > 0 } topic)
                 {
-                    <p class="irc-topic" title="@topic">@topic</p>
+                    <p class="irc-topic" title="@IrcFormatting.Strip(topic)"><MessageText Text="@topic" OnOpenLink="OpenLinkAsync" /></p>
                 }
             </div>
             <span class="irc-spacer"></span>
@@ -78,6 +78,7 @@
                              InputEnabled="_chat.Selected is not null"
                              OnSubmit="SubmitAsync"
                              ActivityText="ActivityText"
+                             OnOpenLink="OpenLinkAsync"
                              TimeZone="AppContext.TimeZone" />
             </main>
 

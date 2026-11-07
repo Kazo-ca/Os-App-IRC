@@ -152,4 +152,12 @@ public sealed class IrcLogTests
         Assert.Single(failures);
         Assert.Contains(channel.Lines, line => line.Text == "two");
     }
+
+    [Fact]
+    public void A_log_line_has_no_formatting_code()
+    {
+        var line = new ChatLine(At, ChatLineKind.Message, "neo", "\u0002bold\u0002 \u000304,01red\u0003 \u001Ditalics\u001D\u000F");
+
+        Assert.Equal("[14:05:09] <neo> bold red italics", IrcLog.Format(line, At));
+    }
 }

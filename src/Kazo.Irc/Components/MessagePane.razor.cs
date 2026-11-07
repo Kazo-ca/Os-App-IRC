@@ -60,6 +60,10 @@ public sealed partial class MessagePane
     [Parameter]
     public Func<ChatLine, string> ActivityText { get; set; } = line => $"{line.Nick} {line.Text}";
 
+    /// <summary>Gets or sets what a click on a web address of a message does (work item 5).</summary>
+    [Parameter]
+    public Func<Uri, Task>? OnOpenLink { get; set; }
+
     /// <summary>Gets or sets the time zone of the times shown (the OS's).</summary>
     [Parameter]
     public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.Utc;

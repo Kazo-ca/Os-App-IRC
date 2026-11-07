@@ -25,21 +25,21 @@
                         {
                             case ChatLineKind.Message:
                                 <span class="message-nick">&lt;@line.Nick&gt;</span>
-                                <span class="message-text">@line.Text</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
                                 break;
                             case ChatLineKind.Action:
                                 <span class="message-nick">* @line.Nick</span>
-                                <span class="message-text">@line.Text</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
                                 break;
                             case ChatLineKind.Notice:
                                 <span class="message-nick">-@line.Nick-</span>
-                                <span class="message-text">@line.Text</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
                                 break;
                             case ChatLineKind.Activity:
-                                <span class="message-text">@ActivityText(line)</span>
+                                <span class="message-text"><MessageText Text="@ActivityText(line)" OnOpenLink="OnOpenLink" /></span>
                                 break;
                             default:
-                                <span class="message-text">@line.Text</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
                                 break;
                         }
                     </div>

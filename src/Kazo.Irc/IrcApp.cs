@@ -12,7 +12,7 @@ namespace Kazo.Irc;
 /// adds the capabilities its code uses, as the plan lists them: <c>network.real.access</c> and the
 /// real ports with the connection (work item 3, after Kazo OS ADR 0235 §3), the notifications and
 /// the logs (work item 4, done: <c>notifications.post</c>, <c>filesystem.user-home.read</c> and
-/// <c>.write</c>), opening a web address in the Browser (work item 5).
+/// <c>.write</c>), opening a web address in the Browser (work item 5, done: <c>apps.launch</c>).
 /// </remarks>
 [AppManifest]
 public sealed class IrcApp : AppDefinition
@@ -72,6 +72,10 @@ public sealed class IrcApp : AppDefinition
         // home, where the user can read them with the other apps.
         AppCapabilities.FileSystemUserHomeRead,
         AppCapabilities.FileSystemUserHomeWrite,
+
+        // Work item 5, decision 17: a web address of a message opens in a new window of the OS
+        // Browser (KazoBrowser.OpenAsync).
+        AppCapabilities.AppsLaunch,
     ];
 
     /// <inheritdoc />

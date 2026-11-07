@@ -104,5 +104,5 @@ that Benoit merges. On the Kazo OS side, series `real-network/base`
 | 2. IRC protocol, IRCv3, fake transport | `irc/2-protocol` | nothing | Done ([#4](https://github.com/Kazo-ca/Os-App-IRC/pull/4)) |
 | 3. WebSocket and relay connection, networks, SASL | `irc/3-connect` | 1, 2, OS release with ADR 0235 | To do |
 | 4. Chat wired to the interface (fake transport), notifications and logs | `irc/4-notifications-and-logs` | 1, 2 | Done ([#6](https://github.com/Kazo-ca/Os-App-IRC/pull/6)) |
-| 5. Web links | `irc/5-links` | 4 (message display) | To do |
+| 5. Web links | `irc/5-links` | 4 (message display) | In review |
 | 6. Store listing, `v1.0.0` | `irc/6-store` | 3, 4, 5 | To do |

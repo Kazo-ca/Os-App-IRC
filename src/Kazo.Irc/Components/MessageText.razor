@@ -1,0 +1,29 @@
+@using Kazo.Irc.Text
+@* The text of a message: its IRC styles as CSS classes, its web addresses as links that open in the
+   OS Browser. Every piece is rendered as text (Razor encodes it): nothing from the network becomes
+   HTML. *@
+@foreach (var segment in Segments)
+{
+    if (segment.Link is { } link)
+    {
+        <a class="message-link" href="@link.AbsoluteUri" target="_blank" rel="noopener noreferrer nofollow"
+           title="@link.AbsoluteUri" @onclick="() => OpenAsync(link)" @onclick:preventDefault="true">@foreach (var run in segment.Runs)
+            {
+                <span class="@ClassOf(run.Style)">@run.Text</span>
+            }</a>
+    }
+    else
+    {
+        foreach (var run in segment.Runs)
+        {
+            if (run.Style.IsPlain)
+            {
+                @run.Text
+            }
+            else
+            {
+                <span class="@ClassOf(run.Style)">@run.Text</span>
+            }
+        }
+    }
+}
