@@ -60,4 +60,127 @@
   <data name="Users" xml:space="preserve">
     <value>Users</value>
   </data>
+  <data name="CommandPlaceholder" xml:space="preserve">
+    <value>Type a command, for example /join #kazo</value>
+  </data>
+  <data name="MessageTo" xml:space="preserve">
+    <value>Message {0}</value>
+  </data>
+  <data name="ConnectTo" xml:space="preserve">
+    <value>Connect to {0}</value>
+  </data>
+  <data name="CloseConversation" xml:space="preserve">
+    <value>Close {0}</value>
+  </data>
+  <data name="UnreadCount" xml:space="preserve">
+    <value>{0} unread</value>
+  </data>
+  <data name="HighlightCount" xml:space="preserve">
+    <value>{0} for you</value>
+  </data>
+  <data name="TalkPrivately" xml:space="preserve">
+    <value>Talk privately with {0}</value>
+  </data>
+  <data name="Logs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="LogsHint" xml:space="preserve">
+    <value>Write the conversations to ~/.local/share/ca.kazo.irc/logs</value>
+  </data>
+  <data name="LogsFailed" xml:space="preserve">
+    <value>The logs could not be written: {0}</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Connecting to {0}...</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Connected as {0}.</value>
+  </data>
+  <data name="Reconnecting" xml:space="preserve">
+    <value>Connection lost. New attempt in {0} s (attempt {1}).</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Disconnected.</value>
+  </data>
+  <data name="Whois" xml:space="preserve">
+    <value>{0} is {1} ({2}), on {3}. Channels: {4}</value>
+  </data>
+  <data name="WhoisUnknown" xml:space="preserve">
+    <value>{0}: no such nickname.</value>
+  </data>
+  <data name="MentionTitle" xml:space="preserve">
+    <value>{0} in {1}</value>
+  </data>
+  <data name="PrivateTitle" xml:space="preserve">
+    <value>{0} (private)</value>
+  </data>
+  <data name="InputUnknownCommand" xml:space="preserve">
+    <value>Unknown command: {0}</value>
+  </data>
+  <data name="InputMissingArgument" xml:space="preserve">
+    <value>This command needs an argument.</value>
+  </data>
+  <data name="InputNoConversation" xml:space="preserve">
+    <value>Open a channel or a conversation to write a message, or type a command.</value>
+  </data>
+  <data name="InputNotAChannel" xml:space="preserve">
+    <value>This command works in a channel.</value>
+  </data>
+  <data name="InputNotConnected" xml:space="preserve">
+    <value>The network is not connected.</value>
+  </data>
+  <data name="InputRefused" xml:space="preserve">
+    <value>The line could not be sent.</value>
+  </data>
+  <data name="ActivityJoin" xml:space="preserve">
+    <value>{0} joined</value>
+  </data>
+  <data name="ActivityPart" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="ActivityPartReason" xml:space="preserve">
+    <value>{0} left ({1})</value>
+  </data>
+  <data name="ActivityKick" xml:space="preserve">
+    <value>{2} was kicked by {0}</value>
+  </data>
+  <data name="ActivityKickReason" xml:space="preserve">
+    <value>{2} was kicked by {0} ({1})</value>
+  </data>
+  <data name="ActivityQuit" xml:space="preserve">
+    <value>{0} quit</value>
+  </data>
+  <data name="ActivityQuitReason" xml:space="preserve">
+    <value>{0} quit ({1})</value>
+  </data>
+  <data name="ActivityNick" xml:space="preserve">
+    <value>{0} is now known as {1}</value>
+  </data>
+  <data name="ActivityTopic" xml:space="preserve">
+    <value>{0} changed the topic to: {1}</value>
+  </data>
+  <data name="ActivityMode" xml:space="preserve">
+    <value>{0} sets mode {1}</value>
+  </data>
+  <data name="ActivityAway" xml:space="preserve">
+    <value>{0} is away</value>
+  </data>
+  <data name="ActivityAwayReason" xml:space="preserve">
+    <value>{0} is away ({1})</value>
+  </data>
+  <data name="ActivityBack" xml:space="preserve">
+    <value>{0} is back</value>
+  </data>
+  <data name="StateConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="StateConnecting" xml:space="preserve">
+    <value>Connecting</value>
+  </data>
+  <data name="StateReconnecting" xml:space="preserve">
+    <value>Reconnecting</value>
+  </data>
+  <data name="StateDisconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
 </root>

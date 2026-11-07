@@ -1,10 +1,41 @@
-@* The users of the current channel (right column, or the right panel on a phone). Work item 1
-   shows the empty list; the channel model of work item 2 fills it. *@
+@using Kazo.Irc.Protocol.Model
+@* The users of the open channel (right column, or the right panel on a phone), with their prefix
+   (@ operator, + voice). A click opens a private conversation. *@
 <div class="user-list">
-    <p class="user-list-empty">@EmptyText</p>
+    @if (Users.Count == 0)
+    {
+        <p class="user-list-empty">@EmptyText</p>
+    }
+    else
+    {
+        <ul class="user-rows">
+            @foreach (var user in Users)
+            {
+                <li @key="user.Nick">
+                    <button type="button" class="user-row @(user.User.IsAway ? "away" : null)" title="@string.Format(System.Globalization.CultureInfo.CurrentCulture, QueryText, user.Nick)"
+                            @onclick="() => OnOpenQuery.InvokeAsync(user.Nick)">
+                        <span class="user-prefix">@(user.HighestPrefix?.ToString() ?? " ")</span>
+                        <span class="user-nick">@user.Nick</span>
+                    </button>
+                </li>
+            }
+        </ul>
+    }
 </div>
 
 @code {
+    /// <summary>Gets or sets the users of the open channel.</summary>
+    [Parameter]
+    public IReadOnlyList<IrcChannelUser> Users { get; set; } = [];
+
+    /// <summary>Gets or sets what a click on a user does: opens a private conversation.</summary>
+    [Parameter]
+    public EventCallback<string> OnOpenQuery { get; set; }
+
+    /// <summary>Gets or sets the hint of a user row ({0}: the nickname).</summary>
+    [Parameter]
+    public string QueryText { get; set; } = "Talk privately with {0}";
+
     /// <summary>Gets or sets the text shown while no channel is open.</summary>
     [Parameter, EditorRequired]
     public string EmptyText { get; set; } = string.Empty;

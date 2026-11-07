@@ -14,6 +14,8 @@ public sealed class KazoIrcFileSystem : IIrcFileSystem
     /// <summary>The one instance.</summary>
     public static KazoIrcFileSystem Instance { get; } = new();
 
+    private readonly HashSet<string> _knownFolders = new(StringComparer.Ordinal);
+
     private KazoIrcFileSystem()
     {
     }
@@ -32,6 +34,28 @@ public sealed class KazoIrcFileSystem : IIrcFileSystem
         }
 
         await KazoFile.WriteAllBytesAsync(path, bytes, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The logs live under <c>~/.local/share/ca.kazo.irc/</c>, in the user's home: the app asks for
+    /// <c>filesystem.user-home.read</c> and <c>.write</c>, so <c>KazoDirectory.CreateDirectoryAsync</c>
+    /// may look at every parent (like <c>mkdir -p</c>). A folder found or created once is not looked
+    /// at again.
+    /// </remarks>
+    public async Task AppendAllTextAsync(string path, string text, CancellationToken cancellationToken)
+    {
+        if (KazoPath.GetDirectoryName(path) is { Length: > 0 } directory && !_knownFolders.Contains(directory))
+        {
+            if (!await KazoDirectory.ExistsAsync(directory, cancellationToken))
+            {
+                await KazoDirectory.CreateDirectoryAsync(directory, cancellationToken);
+            }
+
+            _knownFolders.Add(directory);
+        }
+
+        await KazoFile.AppendAllTextAsync(path, text, cancellationToken);
     }
 
     /// <summary>

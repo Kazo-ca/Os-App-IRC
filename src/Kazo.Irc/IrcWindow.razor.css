@@ -52,6 +52,34 @@
     text-shadow: 0 0 10px var(--kos-accent-glow, transparent);
 }
 
+.irc-heading {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.irc-topic {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.75rem;
+    color: var(--kos-text-muted, #8b949e);
+}
+
+/* The count of mentions and private messages on the compact layout's channels button. */
+.irc-tool-badge {
+    min-width: 1.4em;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--kos-warning, #e3b341);
+    color: var(--kos-bg-base, #0d1117);
+    font-size: 0.7rem;
+    font-style: normal;
+    font-weight: 700;
+    text-align: center;
+}
+
 .irc-title {
     margin: 0;
     overflow: hidden;

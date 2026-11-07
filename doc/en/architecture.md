@@ -21,6 +21,7 @@ Os-App-IRC/
 ├─ src/
 │  ├─ Kazo.Irc/              # the app
 │  ├─ Kazo.Irc.Os/           # host: Kazo OS, its base apps and IRC
+│  ├─ Kazo.Irc.Demo/         # the demonstration network, an IRC server in memory (work item 4, never in the Store)
 │  └─ Kazo.Irc.Protocol/     # the IRC protocol, no dependency on the Kazo SDK (work item 2)
 ├─ tests/
 │  ├─ Kazo.Irc.Tests/        # C# unit tests of the app (xUnit)
@@ -57,14 +58,16 @@ afterwards (without the submodule, the build stops on `KOSAPP0070`).
 
 | Folder or file | Role |
 | --- | --- |
-| `IrcApp.cs` | Manifest (`[AppManifest]`): id `ca.kazo.irc`, name "IRC", version `1.0.0`, publisher `pub.kazo`, category `communication` (decision 20), **desktop and mobile** (`MobileEntryPoint` = the same window, decision 7), `SingleInstancePerUser` (decision 8). 960×620 window, resizable down to 340×400. Work item 1 capabilities: `filesystem.private.read` and `.write` only (the settings file). Each work item adds those its code uses: `network.real.access` and the real ports in work item 3 (after Kazo OS ADR 0235 §3), notifications and logs in work item 4, `apps.launch` in work item 5. |
-| `IrcWindow.razor`, `.razor.cs`, `.razor.css` | The single window: toolbar, three columns, compact-mode panels, status line. |
-| `Components/ChannelList` | Left column: the networks and their channels (empty in work item 1). |
-| `Components/MessagePane` | Middle column: the messages (`role="log"`) and the input line (disabled while there is no connection). |
-| `Components/UserList` | Right column: the channel's users (empty in work item 1). |
+| `IrcApp.cs` | Manifest (`[AppManifest]`): id `ca.kazo.irc`, name "IRC", version `1.0.0`, publisher `pub.kazo`, category `communication` (decision 20), **desktop and mobile** (`MobileEntryPoint` = the same window, decision 7), `SingleInstancePerUser` (decision 8). 960×620 window, resizable down to 340×400. Capabilities: `filesystem.private.read` and `.write` (the settings file, work item 1); `notifications.post`, `filesystem.user-home.read` and `.write` (notifications and logs, work item 4). Each work item adds those its code uses: `network.real.access` and the real ports in work item 3 (after Kazo OS ADR 0235 §3), `apps.launch` in work item 5. |
+| `IrcWindow.razor`, `.razor.cs`, `.razor.css` | The single window: toolbar (title and topic, "Logs" and "Console font" buttons), three columns, compact-mode panels, status line. It holds an `IrcChat`, follows the window's focus, keeps the title's counter and sends `QUIT` when it closes (`IWindowCloseGuard`, decision 8). |
+| `Components/ChannelList` | Left column: each network (state dot), its server tab, channels and private conversations, with unread and mention badges and a × to close; the networks that can be opened. |
+| `Components/MessagePane` (`.razor`, `.razor.cs`, `.razor.css`, `.razor.js`) | Middle column: the lines (`role="log"`, newest at the bottom) and the input line with history and nickname completion. |
+| `Components/UserList` | Right column: the channel's users with their prefix; a click opens a private conversation. |
+| `Chat/` | The chat without Blazor (see "Chat" below): `IrcChat`, `IrcSession`, `Conversation`, `ChatLine`, `IrcNetwork` and `IIrcTransportFactory`, `IrcMentions`, `IrcNick`, `InputHistory`, `NickCompleter`, `IIrcNotifier` / `KazoIrcNotifier`, `DemoNetwork` (under `IRC_DEMO`). |
+| `Logs/` | `IrcLog` (paths, safe names, line format) and `IrcLogWriter` (writes in order). |
 | `Layout/IrcLayout.cs`, `IrcPanel.cs` | Which side panel is open in compact mode (none, channels or users; one at a time). |
-| `Settings/IrcSettings.cs` | `~/.config/ca.kazo.irc/settings.json`: the console font (decision 19). A missing, unreadable or broken file gives the defaults; an unknown field (added by a later work item) is ignored. |
-| `Settings/IIrcFileSystem.cs`, `KazoIrcFileSystem.cs` | Reading and writing the app's files; an in-memory version serves the tests. |
+| `Settings/IrcSettings.cs` | `~/.config/ca.kazo.irc/settings.json`: the console font (decision 19) and the logs (`logsEnabled`, on by default, decision 15). A missing, unreadable or broken file gives the defaults; an unknown field (added by a later work item) is ignored. |
+| `Settings/IIrcFileSystem.cs`, `KazoIrcFileSystem.cs`, `AppScopedFileSystem.cs` | Reading, writing and appending the app's files; an in-memory version serves the tests. `AppScopedFileSystem` enters the app context for the writes made from the client's read loop (see "Logs"). |
 | `Resources/Strings*.resx` | The interface texts, in English and French (ADR 0104). |
 | `Resources/AppManifest.fr.resx` | French name and description, written to `localization/fr.json` by the build. |
 | `wwwroot/icons/app.svg` | Illustrated icon in the app icon style (Kazo OS ADR 0232): the common dark tile, two chat bubbles, a `#` in the front one. |
@@ -101,6 +104,89 @@ creating (like `mkdir -p`); looking at `~/.config` needs
 `filesystem.user-home.read`, which the app does not ask for. `KazoIrcFileSystem`
 therefore creates only `~/.config/ca.kazo.irc/` (like `mkdir` without `-p`),
 through the app's file gateway, when it does not exist.
+
+## Chat (work item 4)
+
+Work item 4 wires the protocol client to the window, with the demonstration
+network as its only transport; work item 3 adds the real ones.
+
+```text
+IrcWindow ──> IrcChat ──> IrcSession (one per network) ──> IrcClient ──> IIrcTransport
+                 │              └─ Conversation (server tab, channels, private) ──> ChatLine
+                 ├─ IIrcNotifier (KazoIrcNotifier: OS notification + sound)
+                 └─ IrcLogWriter ──> IIrcFileSystem (AppScopedFileSystem ──> KazoIrcFileSystem)
+```
+
+| Type | Role |
+| --- | --- |
+| `IrcNetwork`, `IrcNetworkCatalog`, `IIrcTransportFactory` | A network has a `TransportKind`; the catalog gives the client a function that creates a new transport of that kind at each connection attempt. Work item 4: kind `demo` only. Work item 3 adds `websocket` and `relay`. |
+| `IrcSession` | One network: its `IrcClient` and its conversations, filled from the client's events. A message goes to its channel or private conversation; a private notice goes where that person already talks, or to the server tab; numerics, MOTD, WHOIS, errors and the connection's state go to the server tab. A private conversation follows a nickname change. |
+| `Conversation` | The server tab, a channel or a private conversation: its last 1000 lines (`MaxLines`), `UnreadCount`, `HighlightCount`, its users and topic from the client's model. |
+| `ChatLine` | Time, kind (message, action, notice, activity, server, error), nickname, text, `IsOwn`, `IsMention`. |
+| `IrcChat` | The networks, the open conversation, the typed lines (`IrcInputParser` then `IrcClient.ExecuteAsync`; a refused line gives a `ChatInputProblem` the window translates), the counters, the notifications and the logs. `/join` opens the channel when the server confirms it (not after a reconnection); `/query` opens the private conversation. |
+| `IrcNick` | The default nickname (decision 12): the OS user name, keeping the characters a nickname allows, at most 16. |
+
+### What the user is told (decision 14)
+
+| Event | Effect |
+| --- | --- |
+| Someone else's message in a conversation that is not open, or while the window does not have the focus | `UnreadCount` + 1: the conversation is bold in the list with a grey badge. |
+| A **mention** (`IrcMentions`: the nickname as a whole word, any case) or a **private message**, not seen | `HighlightCount` + 1: the conversation is in the warning colour with an amber badge, and the window title becomes "(N) IRC", N = all the highlights (`IrcChat.AttentionCount`). A mention line is highlighted in the conversation. |
+| The same while the window does **not** have the focus (another window active, or minimized) | An OS notification ("kazo-bot in #kazo", "kazo-bot (private)"), which the OS shows as a bubble and with the notification sound. Notices never notify. |
+| The conversation is open and the window gets the focus back | Both counters go back to 0; the title becomes "IRC". |
+
+The focus comes from the window events of the SDK (`OnWindowActivated`,
+`OnWindowDeactivated`, `OnWindowStateChanged`). A private conversation started
+by someone else does not take the user away from the open conversation.
+
+### Input line
+
+Enter sends; ↑ and ↓ walk the last 100 lines (`InputHistory`, the line being
+typed is kept); Tab completes the last word with the users of the channel (or
+the other person) and cycles through the matches, adding `": "` at the start of
+the line (`NickCompleter`). Blazor cannot cancel one key only, so
+`MessagePane.razor.js` cancels Tab's default action, and only while the input
+holds text: an empty input lets Tab leave it. The lines follow the newest one
+without script (`flex-direction: column-reverse`), and only the last 400 are
+rendered.
+
+### Logs (decision 15)
+
+| Rule | Value |
+| --- | --- |
+| File | `~/.local/share/ca.kazo.irc/logs/<network>/<conversation>/YYYY-MM-DD.log`, the day and times in the OS time zone (`AppContext.TimeZone`). |
+| Lines | `[HH:MM:SS] <nick> text`, `[HH:MM:SS] * nick action`, `[HH:MM:SS] -nick- notice`, `[HH:MM:SS] *** nick joined` (and left, quit, is now known as, changed the topic, sets mode, is away, is back). The server tab and server lines are not logged. |
+| Names | `IrcLog.SafeName`: `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|` and control characters become `_`; a leading dot becomes `_` (so never `.`, `..` or a hidden folder); never empty; at most 64 characters. The conversation's name is folded to the network's case rules (`#Kazo` and `#kazo` share a folder). |
+| Order and errors | `IrcLogWriter` writes one line after the other. The first failure is shown once on the status line and never stops the chat or the next lines. |
+| Option | The "Logs" button (`aria-pressed`) saves `logsEnabled` in `settings.json`. |
+| Context | The lines arrive from the client's read loop, which the OS did not start: `KazoFile` would find no app context there. `AppScopedFileSystem` enters it (`KazoExecutionContext.Enter`) for each operation. |
+
+Another app reading a log right after a line is written may see it a few
+seconds later (the OS file system); the end-to-end test reads again.
+
+### Demonstration network
+
+`Kazo.Irc.Demo` is `DemoIrcServer`, an `IIrcTransport` that plays a small IRC
+server in memory (no SDK reference). It registers the client (CAP, welcome
+numerics, `005`, MOTD that says what to try), answers `PING`, `JOIN` (topic and
+`NAMES` with `@kazo-bot`, `+morpheus`, `trinity`), `PART`, `TOPIC`, `WHOIS`,
+`AWAY`, `NICK`, `MODE`, `QUIT`, refuses the bot's nickname (`433`) and unknown
+commands (`421`). Its bot, `kazo-bot`:
+
+| You write | The bot |
+| --- | --- |
+| a channel message that names it | answers at once and names you (a mention) |
+| `!mention N` in a channel | names you in that channel N seconds later (3 by default, 60 at most) |
+| `!private N` in a channel | sends you a private message N seconds later |
+| a private message to it | answers privately |
+
+It is offered as "Kazo Demo" only when the app is built with
+`IrcDemoNetwork=true`: by default in Debug, and in the CI with
+`dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` for the
+end-to-end tests. Then `Kazo.Irc` references `Kazo.Irc.Demo` and defines
+`IRC_DEMO` (`Chat/DemoNetwork.cs`, `Chat/IrcNetworks.cs`). The Store and the
+packages build Release without it: the package has neither `Kazo.Irc.Demo.dll`
+nor the demo code.
 
 ## Protocol (`Kazo.Irc.Protocol`)
 
@@ -210,8 +296,8 @@ dotnet test Kazo.Irc.slnx
 | Suite | Command | Content |
 | --- | --- | --- |
 | Protocol (xUnit) | `dotnet test Kazo.Irc.slnx` | see "Protocol tests" above. |
-| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifest (class and generated `manifest.json`, French texts, icon), complete English and French texts, compact-mode panels, settings (path, defaults, broken or denied file, unknown field, failed write). |
-| End to end | `npm run test:e2e` after `dotnet build Kazo.Irc.slnx -c Release` | in the host, fresh profile: three columns side by side on a computer in the OS theme; console font kept after closing and reopening; on a Pixel 7, one column and both panels. |
+| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifest (class and generated `manifest.json`, French texts, icon, capabilities), complete English and French texts, compact-mode panels, settings (path, defaults, broken or denied file, unknown field, failed write, logs option); chat on the demonstration server with a fake clock (connection, join, messages, mentions, private messages, unread, title counter, notifications with and without the focus, input problems, close, `QUIT`); mentions, default nickname, history, completion; logs (paths, hostile names, line format, time zone, option, failed write); the demonstration server. |
+| End to end | `npm run test:e2e` after `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | in the host, fresh profile: three columns side by side on a computer in the OS theme; console font kept after closing and reopening; on a Pixel 7, one column and both panels; `chat.e2e.mjs`: connect to the demonstration network, `/join #kazo`, send and receive, history and Tab, a mention while the Terminal has the focus gives an OS notification and "(1) IRC", the log file read with `cat` in the Terminal, a private message counted, closing the window, the chat on a Pixel 7. |
 
 The end-to-end tests start the host (`dotnet run --no-build -c Release`) on a
 free port, or use `IRC_BASE_URL`.
@@ -222,6 +308,7 @@ free port, or use `IRC_BASE_URL`.
 | --- | --- |
 | 1. `irc/1-solution` | Solution, host, CI, manifest, icon, empty window and layout, console font, tests. |
 | 2. `irc/2-protocol` | The `Kazo.Irc.Protocol` library and its tests (the "Protocol" section above). |
+| 4. `irc/4-notifications-and-logs` | The chat wired to the window on the demonstration network, notifications and title counter, logs (the "Chat" section above). |
 
 ## Work item 2 tasks
 
@@ -232,4 +319,16 @@ free port, or use `IRC_BASE_URL`.
 - [x] Model of channels and users: prefixes, `NAMES`, `JOIN`, `PART`, `KICK`, `QUIT`, `NICK`, `TOPIC`, `MODE`, `AWAY`, `ACCOUNT`.
 - [x] Input commands `/join /part /msg /me /nick /topic /whois /away /quit /query /raw`.
 - [x] xUnit tests.
-- [ ] Wiring to the UI: work items 3 and 4 (work item 1 was not merged when work item 2 ended).
+- [x] Wiring to the UI: done by work item 4 (with the demonstration network); the real transports come with work item 3.
+
+## Work item 4 tasks
+
+- [x] One session per network holding an `IrcClient`; transport factory (`IIrcTransportFactory`) for work item 3 to complete.
+- [x] Demonstration network in memory (`Kazo.Irc.Demo`), only with `IrcDemoNetwork` (Debug, CI E2E), never in the Store package.
+- [x] Networks and conversations list, message view (time, nickname, `/me`, notices, server lines), users with prefixes.
+- [x] Input line: commands of decision 18 through `ExecuteAsync`, history (↑/↓), nickname completion (Tab); desktop and mobile.
+- [x] Closing the window sends `QUIT` (decision 8).
+- [x] Mentions and private messages: OS notification and sound without the focus, "(N) IRC" title, unread and mention badges (decision 14).
+- [x] Logs per day in `~/.local/share/ca.kazo.irc/logs/`, safe names, `logsEnabled` option (decision 15).
+- [x] Capabilities `notifications.post`, `filesystem.user-home.read` and `.write`.
+- [x] xUnit and Playwright tests; docs (fr, en), plan progress.

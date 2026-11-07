@@ -34,6 +34,9 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+# The app's IRC log code (Kazo.Irc.Logs) and its tests are source, not build logs.
+!src/Kazo.Irc/Logs/
+!tests/Kazo.Irc.Tests/Logs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

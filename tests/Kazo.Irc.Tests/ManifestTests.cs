@@ -33,10 +33,18 @@ public sealed class ManifestTests
     }
 
     [Fact]
-    public void Work_item_1_asks_only_for_its_own_folder_and_nothing_dangerous()
+    public void It_asks_for_its_folder_the_notifications_and_the_logs_and_nothing_dangerous()
     {
+        // Work item 1: its own folder (settings.json). Work item 4: the notifications (decision 14)
+        // and the logs in ~/.local/share/ca.kazo.irc/logs (decision 15).
         Assert.Equal(
-            [AppCapabilities.FileSystemPrivateRead, AppCapabilities.FileSystemPrivateWrite],
+            [
+                AppCapabilities.FileSystemPrivateRead,
+                AppCapabilities.FileSystemPrivateWrite,
+                AppCapabilities.NotificationsPost,
+                AppCapabilities.FileSystemUserHomeRead,
+                AppCapabilities.FileSystemUserHomeWrite,
+            ],
             _app.Capabilities);
         Assert.DoesNotContain(_app.Capabilities, AppCapabilities.IsDangerous);
     }

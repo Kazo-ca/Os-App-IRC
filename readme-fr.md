@@ -9,8 +9,11 @@ n'acceptent pas WebSocket.
 
 **État :** en développement (série `irc/base`). La bibliothèque du protocole IRC est écrite
 (chantier 2), et l'app s'ouvre dans Kazo OS avec sa mise en page (trois colonnes sur ordinateur,
-une colonne avec des panneaux sur téléphone) et l'option de police console (chantier 1) ; la
-connexion arrive avec les chantiers suivants (voir le tableau d'avancement du plan).
+une colonne avec des panneaux sur téléphone) et l'option de police console (chantier 1). La
+discussion est branchée à la fenêtre (chantier 4) : dans un build Debug, le réseau « Kazo Demo », un
+serveur IRC dans l'app, montre les conversations, les mentions avec notification de l'OS et le titre
+« (N) IRC », et les journaux par jour dans `~/.local/share/ca.kazo.irc/logs/`. Les vrais réseaux
+arrivent avec le chantier 3 (voir le tableau d'avancement du plan).
 
 - Plan : [Français](doc/fr/plan.md) · [English](doc/en/plan.md)
 - Architecture du code : [Français](doc/fr/architecture.md) · [English](doc/en/architecture.md)
@@ -31,7 +34,7 @@ paquets de nuget.org (ce que compilent la CI et le Kazo OS Store).
 ## Tests
 
 ```bash
-dotnet build Kazo.Irc.slnx -c Release
+dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true   # les tests E2E utilisent le réseau de démonstration
 dotnet test Kazo.Irc.slnx -c Release --no-build
 npm ci && npx playwright install chromium
 npm run test:e2e                            # l'app dans l'hôte Kazo OS, ordinateur et téléphone

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Kazo.Irc.Os/Kazo.Irc.Os.csproj" />
+    <Project Path="src/Kazo.Irc.Demo/Kazo.Irc.Demo.csproj" />
     <Project Path="src/Kazo.Irc/Kazo.Irc.csproj" />
     <Project Path="src/Kazo.Irc.Protocol/Kazo.Irc.Protocol.csproj" />
   </Folder>

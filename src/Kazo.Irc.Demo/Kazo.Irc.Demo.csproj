@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The demonstration network of the IRC app (work item 4): a small IRC server that lives in memory
+    and answers the client through IIrcTransport, so the chat can be tried and tested with no real
+    network. Like Kazo.Irc.Protocol it has no reference to the Kazo OS SDK.
+
+    It is NEVER part of the package published to the Kazo OS Store: Kazo.Irc references it only when
+    IrcDemoNetwork is true (by default in Debug; the CI's end-to-end build sets it in Release). See
+    doc/en/architecture.md, "Demonstration network".
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Kazo.Irc.Demo</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kazo.Irc.Protocol\Kazo.Irc.Protocol.csproj" />
+  </ItemGroup>
+
+</Project>

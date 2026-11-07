@@ -9,6 +9,9 @@
 .message-log {
     flex: 1;
     min-height: 0;
+    display: flex;
+    /* The newest line stays in view as lines arrive, unless the user scrolled up to read. */
+    flex-direction: column-reverse;
     overflow-y: auto;
     padding: 12px 16px;
     font-family: var(--irc-text-font);
@@ -16,6 +19,7 @@
 }
 
 .message-empty {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -90,4 +94,65 @@
 .message-input-send:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+/* The lines: time, nickname, text; own lines, mentions, activities and server lines differ. */
+.message-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.message-line {
+    padding: 1px 6px;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+}
+
+/* Spaces typed in a message are kept (ASCII art, aligned columns); the markup's own are not. */
+.message-text {
+    white-space: pre-wrap;
+}
+
+.message-time {
+    margin-right: 8px;
+    font-family: var(--kos-font-mono, 'Consolas', monospace);
+    font-size: 0.8em;
+    color: var(--kos-text-muted, #8b949e);
+}
+
+.message-nick {
+    margin-right: 6px;
+    font-weight: 700;
+    color: var(--kos-text-accent, var(--kos-accent, #42d392));
+}
+
+.message-line.own .message-nick {
+    color: var(--kos-text-secondary, #c9d1d9);
+}
+
+.message-line.kind-action .message-text,
+.message-line.kind-action .message-nick {
+    font-style: italic;
+}
+
+.message-line.kind-notice .message-nick {
+    color: var(--kos-info, #58a6ff);
+}
+
+.message-line.kind-activity,
+.message-line.kind-server {
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 0.9em;
+}
+
+.message-line.kind-error {
+    color: var(--kos-error, #f85149);
+    font-size: 0.9em;
+}
+
+/* Decision 14: a line that names the user. */
+.message-line.mention {
+    background: color-mix(in srgb, var(--kos-warning, #e3b341) 16%, transparent);
+    box-shadow: inset 3px 0 0 var(--kos-warning, #e3b341);
 }

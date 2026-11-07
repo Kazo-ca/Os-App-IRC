@@ -1,4 +1,4 @@
-/* The channel list: a scrolling column; its rows come with work item 3. */
+/* The networks and their conversations: a scrolling column of rows. */
 .channel-list {
     flex: 1;
     min-height: 0;
@@ -11,4 +11,154 @@
     margin: 12px 4px;
     color: var(--kos-text-muted, #8b949e);
     font-size: 0.85rem;
+}
+
+.channel-network {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+}
+
+.channel-row {
+    display: flex;
+    align-items: center;
+    border-radius: var(--kos-radius-md, 6px);
+}
+
+.channel-row.kind-channel,
+.channel-row.kind-private {
+    padding-left: 12px;
+}
+
+.channel-row:hover,
+.channel-row.selected {
+    background: var(--kos-accent-subtle, rgba(66, 211, 146, 0.1));
+}
+
+.channel-select {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    border: none;
+    background: transparent;
+    color: var(--kos-text-secondary, #c9d1d9);
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.channel-row.kind-server .channel-select {
+    font-weight: 700;
+    color: var(--kos-text-primary, #e6edf3);
+}
+
+.channel-row.selected .channel-select {
+    color: var(--kos-text-accent, var(--kos-accent, #42d392));
+}
+
+/* Decision 14: an unread conversation stands out; one with a mention stands out in the accent. */
+.channel-row.unread .channel-select {
+    font-weight: 700;
+    color: var(--kos-text-primary, #e6edf3);
+}
+
+.channel-row.highlight .channel-select {
+    color: var(--kos-warning, #e3b341);
+}
+
+.channel-row.parted .channel-name {
+    font-style: italic;
+    opacity: 0.6;
+}
+
+.channel-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.channel-state {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--kos-text-muted, #8b949e);
+}
+
+.channel-state.state-connected {
+    background: var(--kos-success, #3fb950);
+    box-shadow: 0 0 6px var(--kos-success, #3fb950);
+}
+
+.channel-state.state-connecting,
+.channel-state.state-registering,
+.channel-state.state-reconnecting {
+    background: var(--kos-warning, #e3b341);
+}
+
+.channel-badge {
+    flex: none;
+    min-width: 1.4em;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--kos-warning, #e3b341);
+    color: var(--kos-bg-base, #0d1117);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.channel-badge.quiet {
+    background: var(--kos-btn-bg, #30363d);
+    color: var(--kos-text-secondary, #c9d1d9);
+}
+
+.channel-close {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: var(--kos-radius-md, 6px);
+    background: transparent;
+    color: var(--kos-text-muted, #8b949e);
+    cursor: pointer;
+    opacity: 0;
+}
+
+.channel-row:hover .channel-close,
+.channel-row.selected .channel-close,
+.channel-close:focus-visible {
+    opacity: 1;
+}
+
+.channel-connect {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 8px;
+    border: 1px dashed var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-md, 6px);
+    background: transparent;
+    color: var(--kos-text-accent, var(--kos-accent, #42d392));
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.channel-connect:hover {
+    border-color: var(--kos-accent, #42d392);
+}
+
+.channel-select:focus-visible,
+.channel-close:focus-visible,
+.channel-connect:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: -2px;
 }
