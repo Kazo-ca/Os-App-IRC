@@ -30,4 +30,20 @@ public sealed record IrcChatTexts
 
     /// <summary>{0}: who. Title of a private message's notification.</summary>
     public string PrivateTitle { get; init; } = "{0} (private)";
+
+    /// <summary>
+    /// What a connection failure means, by <c>IrcTransportErrors</c> code (work item 3). {0}: the
+    /// network, {1}: the technical message. A code with no text shows the technical message.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> TransportErrors { get; init; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["NO_PERMISSION"] = "IRC may not reach the real network: an administrator must allow its « real network » permission (Settings, app permissions).",
+        ["NO_SERVER"] = "{0} needs the Kazo server: no Kazo server relays IRC (none connected, relay off, or the permission has not reached it yet).",
+        ["REFUSED"] = "{0} refused the connection (the IRC server, or the Kazo server, which may block this port).",
+        ["CERTIFICATE_REFUSED"] = "The TLS certificate of {0} was refused: {1}",
+        ["SIMULATED_HOST"] = "This address is on the simulated network, which has no IRC server yet.",
+        ["UNREACHABLE"] = "{0} could not be reached: {1}",
+        ["LOST"] = "The connection to {0} was lost: {1}",
+        ["NOT_SUPPORTED"] = "This connection cannot be opened here: {1}",
+    };
 }

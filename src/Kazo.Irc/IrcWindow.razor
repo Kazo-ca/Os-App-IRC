@@ -65,6 +65,11 @@
                              CloseText="@L["CloseConversation"]"
                              UnreadText="@L["UnreadCount"]"
                              HighlightText="@L["HighlightCount"]"
+                             ServerRequiredText="@L["ServerRequired"]"
+                             NoServerText="@L["NoServerConnected"]"
+                             RelayUnavailable="_chat.RelayUnavailable"
+                             OnManage="OpenEditor"
+                             ManageText="@L["ManageNetworks"]"
                              StateText="StateText" />
             </nav>
 
@@ -98,6 +103,17 @@
                 <button type="button" class="irc-scrim" aria-label="@L["ClosePanel"]" @onclick="_layout.Close"></button>
             }
         </div>
+
+        @if (_editorOpen)
+        {
+            <NetworkEditor Networks="_chat.Catalog.EditableNetworks"
+                           Text="key => L[key]"
+                           DefaultNick="@DefaultNick"
+                           HasSavedPassword="HasSavedPasswordAsync"
+                           OnSave="SaveNetworkAsync"
+                           OnDelete="DeleteNetworkAsync"
+                           OnClose="CloseEditor" />
+        }
 
         @if (_status is not null)
         {

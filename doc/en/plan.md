@@ -38,7 +38,7 @@ Benoit's answers on 2026-11-07 ("ok" or "agreed" = the recommendation).
 | 10 | OS changes | One ADR (0235) in three sections and a `real-network/base` series in Kazo OS: [Os#395](https://github.com/Kazo-ca/Os/issues/395). |
 | 11 | WebSocket capability | The same `network.real.access` as the relay: one grant "this app talks to the real network". |
 | 12 | Nickname and password | Default nickname = the OS user name. SASL PLAIN; the password is kept in the OS's encrypted keyring (`KazoKeyring`), never in a clear-text file. |
-| 13 | Offered networks | A short editable list: Libera.Chat, OFTC, and one network that accepts WebSocket. A network without WebSocket is marked "Kazo server required". Work item 3 checks which networks accept WebSocket. |
+| 13 | Offered networks | A short editable list: Libera.Chat, OFTC, and one network that accepts WebSocket. A network without WebSocket is marked "Kazo server required". Work item 3 checks which networks accept WebSocket. **Work item 3:** Libera.Chat and OFTC have none (relay); UnrealIRCd (`wss://irc.unrealircd.org/`) has one, chosen by Benoit on 2026-11-07. |
 | 14 | Mentions and private messages | When the window is not focused: OS notification, notification sound, unread count in the window title. Unread channels highlighted in the list. |
 | 15 | Logs | On by default, as text in `~/.local/share/ca.kazo.irc/logs/<network>/<channel>/YYYY-MM-DD.log`; an option turns them off. |
 | 16 | `irc://` links | Kazo OS cannot associate a URL scheme with an app yet: [Os#394](https://github.com/Kazo-ca/Os/issues/394), linked to [#2](https://github.com/Kazo-ca/Os-App-IRC/issues/2). |
@@ -54,7 +54,7 @@ Benoit's answers on 2026-11-07 ("ok" or "agreed" = the recommendation).
 | --- | --- |
 | Manifest | `[AppManifest]` `IrcApp`: window, desktop and mobile, `SingleInstancePerUser`, declared real ports `tcp/6697` and `tcp/6667` (exact shape set by ADR 0235 in code). |
 | Capabilities | `network.real.access` (dangerous: approved at install, with the ports), `notifications.post`, `filesystem.private.read` and `.write` (`~/.config/ca.kazo.irc/`), `filesystem.user-home.write` (logs in `~/.local/share/ca.kazo.irc/`), `apps.launch` (open an address in the Browser). The SASL password goes in the app's keyring, no capability needed. |
-| Transports | An `IIrcTransport` interface (incoming and outgoing text lines) with three implementations: WebSocket (`KazoClientWebSocket`, subprotocol `text.ircv3.net`), TCP relay (`KazoTcpClient`, TLS by the relay), and a fake for tests. Chosen per network; the "through the Kazo server" option is offered only when the server is connected. |
+| Transports | An `IIrcTransport` interface (incoming and outgoing text lines) with three implementations: WebSocket (`KazoClientWebSocket`, subprotocol `text.ircv3.net`), TCP relay (`KazoTcpClient`, TLS by the relay), and a fake for tests. Chosen per network; the "through the Kazo server" option is offered only when the server is connected. **Changed in work item 3 (Benoit's choice, 2026-11-07):** an app cannot see the server without `server.connection.manage` (dangerous); the option is therefore always offered and **tried on demand**: "Kazo server required", then "No Kazo server connected" after a failure. A detection API is asked of Kazo OS ([Os#418](https://github.com/Kazo-ca/Os/issues/418)). |
 | Protocol | A C# library in the solution: parsing and writing messages (IRCv3 tags included), CAP negotiation, SASL PLAIN, `PING`/`PONG`, reconnection with growing delay, rejoining open channels after a reconnection. |
 | Interface | Desktop: three columns (networks and channels, messages, channel users), input with history and nickname completion (Tab). Mobile: one column, channel list and user list as panels. |
 | Settings | `~/.config/ca.kazo.irc/networks.json`: networks (address, port, transport, TLS, nickname, SASL account, auto-joined channels); `~/.config/ca.kazo.irc/settings.json`: logs, font, notifications. |
@@ -97,12 +97,12 @@ that Benoit merges. On the Kazo OS side, series `real-network/base`
 
 | Work item | Branch | Depends on | State |
 | --- | --- | --- | --- |
-| Kazo OS 1: `KazoClientWebSocket` | `real-network/1-websocket` (Kazo-ca/Os) | nothing | To do |
-| Kazo OS 2: TLS by the relay | `real-network/2-relay-tls` (Kazo-ca/Os) | nothing | To do |
-| Kazo OS 3: declared ports, `BlockedPorts` | `real-network/3-declared-ports` (Kazo-ca/Os) | nothing | To do |
+| Kazo OS 1: `KazoClientWebSocket` | `real-network/1-websocket` (Kazo-ca/Os) | nothing | Done (Kazo OS 3.2.0) |
+| Kazo OS 2: TLS by the relay | `real-network/2-relay-tls` (Kazo-ca/Os) | nothing | Done (Kazo OS 3.2.0) |
+| Kazo OS 3: declared ports, `BlockedPorts` | `real-network/3-declared-ports` (Kazo-ca/Os) | nothing | Done (Kazo OS 3.2.0) |
 | 1. Solution, manifest, window, desktop and mobile layout | `irc/1-solution` | nothing | Done ([#5](https://github.com/Kazo-ca/Os-App-IRC/pull/5)) |
 | 2. IRC protocol, IRCv3, fake transport | `irc/2-protocol` | nothing | Done ([#4](https://github.com/Kazo-ca/Os-App-IRC/pull/4)) |
-| 3. WebSocket and relay connection, networks, SASL | `irc/3-connect` | 1, 2, OS release with ADR 0235 | To do |
+| 3. WebSocket and relay connection, networks, SASL | `irc/3-connect` | 1, 2, OS release with ADR 0235 | In review ([#8](https://github.com/Kazo-ca/Os-App-IRC/pull/8)) |
 | 4. Chat wired to the interface (fake transport), notifications and logs | `irc/4-notifications-and-logs` | 1, 2 | Done ([#6](https://github.com/Kazo-ca/Os-App-IRC/pull/6)) |
 | 5. Web links | `irc/5-links` | 4 (message display) | Done ([#7](https://github.com/Kazo-ca/Os-App-IRC/pull/7)) |
 | 6. Store listing, `v1.0.0` | `irc/6-store` | 3, 4, 5 | To do |

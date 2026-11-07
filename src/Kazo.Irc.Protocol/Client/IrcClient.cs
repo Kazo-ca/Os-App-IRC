@@ -61,6 +61,13 @@ public sealed partial class IrcClient : IAsyncDisposable
     /// <summary>A line was received and read (raised before the model is updated by it).</summary>
     public event EventHandler<IrcMessage>? MessageReceived;
 
+    /// <summary>
+    /// A line received was handled: the model (channels, users, topics) is up to date with it.
+    /// A view redraws from here what changes without an <see cref="Activity"/> or a message, such
+    /// as the end of a <c>NAMES</c> list or a topic sent on join.
+    /// </summary>
+    public event EventHandler<IrcMessage>? MessageHandled;
+
     /// <summary>A line was sent.</summary>
     public event EventHandler<string>? LineSent;
 
@@ -279,6 +286,17 @@ public sealed partial class IrcClient : IAsyncDisposable
                 Error?.Invoke(this, new IrcClientError("PING_TIMEOUT", "The server stopped answering."));
             }
         }
+        catch (IrcTransportException ex)
+        {
+            // The transport says what failed; a permanent failure (no permission, certificate
+            // refused, no relay) is not retried until the user connects again.
+            if (ex.IsPermanent)
+            {
+                _stopReconnecting = true;
+            }
+
+            Error?.Invoke(this, new IrcClientError(ex.Code, ex.Message, ex));
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Error?.Invoke(this, new IrcClientError("TRANSPORT", ex.Message, ex));
@@ -314,6 +332,7 @@ public sealed partial class IrcClient : IAsyncDisposable
 
             MessageReceived?.Invoke(this, message);
             await HandleAsync(message, cancellationToken).ConfigureAwait(false);
+            MessageHandled?.Invoke(this, message);
         }
     }
 

@@ -3,7 +3,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium, devices } from 'playwright';
-import { boot, connectDemo, ircOsWindow, openIrc, runInTerminal, say, startHost } from './host.mjs';
+import { approveIfAsked, boot, connectDemo, ircOsWindow, openIrc, runInTerminal, say, startHost } from './host.mjs';
 
 let host;
 let browser;
@@ -147,13 +147,8 @@ test('web addresses open in the OS Browser; formatting is drawn, markup stays te
     await links.first().click();
     // The first launch of the Browser in a fresh profile asks the administrator to approve the
     // Browser's own real-network capability (Kazo OS, not this app): approve it as "neo".
-    const approval = page.getByText('Administrator authorization required', { exact: false });
     const address = page.locator('[data-window-id] .address-input');
-    await approval.or(address).first().waitFor({ timeout: 30_000 });
-    if (await approval.isVisible()) {
-        await page.locator('input[type="password"]').last().fill('matrix123');
-        await page.getByRole('button', { name: 'Allow', exact: true }).click();
-    }
+    await approveIfAsked(page, address);
     await address.first().waitFor({ timeout: 30_000 });
     await page.waitForFunction(
         () => [...document.querySelectorAll('[data-window-id] .address-input')].some(input => input.value.includes('docs.hack/guide?topic=irc')),

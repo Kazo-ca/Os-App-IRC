@@ -88,19 +88,29 @@ public sealed class IrcChat : IAsyncDisposable
     public int AttentionCount => _sessions.Sum(s => s.Conversations.Sum(c => c.HighlightCount));
 
     /// <summary>
+    /// Whether a relay connection found no Kazo server during this session (decision 13). The
+    /// networks that need it are then marked « no Kazo server connected » instead of « Kazo server
+    /// required »; connecting again tries again (a server may have been connected since).
+    /// </summary>
+    public bool RelayUnavailable { get; private set; }
+
+    /// <summary>
     /// Opens a network: creates its session, shows its server tab and starts connecting. A network
-    /// already open is only shown.
+    /// already open is only shown; a network whose connection stopped for good (a failure that is
+    /// not retried, or a <c>QUIT</c>) gets a new session, with the network's current settings.
     /// </summary>
     /// <param name="network">A network of the catalog.</param>
     /// <param name="nick">The nickname (decision 12: the OS user name by default).</param>
+    /// <param name="sasl">The SASL PLAIN account and password (decision 12), or null.</param>
     /// <returns>The session.</returns>
-    public IrcSession Connect(IrcNetwork network, string nick)
+    public IrcSession Connect(IrcNetwork network, string nick, IrcSaslCredentials? sasl = null)
     {
         ArgumentNullException.ThrowIfNull(network);
-        if (_sessions.FirstOrDefault(s => s.Network.Id == network.Id) is { } open)
+        var index = _sessions.FindIndex(s => s.Network.Id == network.Id);
+        if (index >= 0 && !IsStopped(_sessions[index]))
         {
-            Select(open.Server);
-            return open;
+            Select(_sessions[index].Server);
+            return _sessions[index];
         }
 
         var options = new IrcClientOptions
@@ -108,15 +118,42 @@ public sealed class IrcChat : IAsyncDisposable
             Nick = nick,
             AlternateNicks = [nick + "_", nick + "__"],
             AutoJoin = [.. network.AutoJoin.Select(channel => new IrcChannelJoin(channel))],
+            Sasl = sasl,
         };
         var session = new IrcSession(network, options, Catalog.TransportsFor(network), _texts, _time);
         session.LineAdded += (conversation, line) => OnLineAdded(conversation, line);
         session.Changed += () => Changed?.Invoke();
         session.Joined += OnJoined;
-        _sessions.Add(session);
+        session.Failed += error => OnFailed(session, error);
+        if (index >= 0)
+        {
+            // The stopped session gives its place to the new attempt.
+            var stopped = _sessions[index];
+            _sessions[index] = session;
+            _ = stopped.DisposeAsync().AsTask();
+        }
+        else
+        {
+            _sessions.Add(session);
+        }
+
+        if (network.NeedsKazoServer)
+        {
+            RelayUnavailable = false;
+        }
+
         Select(session.Server);
         session.Start();
         return session;
+    }
+
+    /// <summary>Whether a session's connection stopped for good: it can be opened again.</summary>
+    /// <param name="session">A session.</param>
+    /// <returns>True when its client is disconnected and no longer trying.</returns>
+    public static bool IsStopped(IrcSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return session.Client.State == IrcClientState.Disconnected && session.Client.Completion.IsCompleted;
     }
 
     /// <summary>Opens a conversation: it is now seen (when the window has the focus).</summary>
@@ -248,6 +285,15 @@ public sealed class IrcChat : IAsyncDisposable
             {
                 _pendingSelections.Add(channel);
             }
+        }
+    }
+
+    private void OnFailed(IrcSession session, IrcClientError error)
+    {
+        if (error.Code == Protocol.Transport.IrcTransportErrors.NoServer && session.Network.NeedsKazoServer)
+        {
+            RelayUnavailable = true;
+            Changed?.Invoke();
         }
     }
 

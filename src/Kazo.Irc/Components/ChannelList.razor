@@ -45,8 +45,21 @@
 
     @foreach (var network in AvailableNetworks)
     {
-        <button type="button" class="channel-connect" @onclick="() => OnConnect.InvokeAsync(network)">
-            <span aria-hidden="true">+</span> @string.Format(System.Globalization.CultureInfo.CurrentCulture, ConnectText, network.Name)
+        <button type="button" class="channel-connect @(network.NeedsKazoServer ? "needs-server" : null)" @onclick="() => OnConnect.InvokeAsync(network)">
+            <span class="channel-connect-name"><span aria-hidden="true">+</span> @string.Format(System.Globalization.CultureInfo.CurrentCulture, ConnectText, network.Name)</span>
+            @if (network.NeedsKazoServer)
+            {
+                @* Decision 13: a network without WebSocket needs the Kazo server's relay. *@
+                <span class="channel-connect-note @(RelayUnavailable ? "unavailable" : null)">@(RelayUnavailable ? NoServerText : ServerRequiredText)</span>
+            }
+        </button>
+    }
+
+    @if (OnManage.HasDelegate)
+    {
+        <button type="button" class="channel-manage" @onclick="OnManage">
+            <svg class="channel-manage-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h7M12 4h2M2 12h2M7 12h7M9 2.5v3M4 10.5v3" /></svg>
+            @ManageText
         </button>
     }
 </div>
@@ -95,6 +108,26 @@
     /// <summary>Gets or sets the format of the mention badge's hint ({0}: the count).</summary>
     [Parameter]
     public string HighlightText { get; set; } = "{0} for you";
+
+    /// <summary>Gets or sets the note of a network that needs the Kazo server (« Kazo server required »).</summary>
+    [Parameter]
+    public string ServerRequiredText { get; set; } = "Kazo server required";
+
+    /// <summary>Gets or sets the note of such a network once a relay connection found no server.</summary>
+    [Parameter]
+    public string NoServerText { get; set; } = "No Kazo server connected";
+
+    /// <summary>Gets or sets whether a relay connection found no Kazo server during this session.</summary>
+    [Parameter]
+    public bool RelayUnavailable { get; set; }
+
+    /// <summary>Gets or sets what the « Manage networks » button does (no button when unset).</summary>
+    [Parameter]
+    public EventCallback OnManage { get; set; }
+
+    /// <summary>Gets or sets the text of the « Manage networks » button.</summary>
+    [Parameter]
+    public string ManageText { get; set; } = "Manage networks";
 
     /// <summary>Gets or sets the name of a connection state.</summary>
     [Parameter]

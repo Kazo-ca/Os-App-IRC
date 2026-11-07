@@ -14,7 +14,7 @@ etc.).
 
 ```text
 Os-App-IRC/
-├─ external/KazoOs/          # sous-module : Kazo OS sur le tag v3.0.0 (la version du dépôt)
+├─ external/KazoOs/          # sous-module : Kazo OS sur le tag v3.2.0 (la version du dépôt)
 ├─ Directory.Build.props     # racine du sous-module, profil, import de Versions.props
 ├─ Directory.Build.targets   # mode source en Debug, KOSAPP0070 sans sous-module
 ├─ global.json
@@ -59,15 +59,19 @@ après coup (sans sous-module, le build s'arrête sur `KOSAPP0070`).
 
 | Dossier ou fichier | Rôle |
 | --- | --- |
-| `IrcApp.cs` | Manifeste (`[AppManifest]`) : id `ca.kazo.irc`, nom « IRC », version `1.0.0`, éditeur `pub.kazo`, catégorie `communication` (décision 20), **ordinateur et mobile** (`MobileEntryPoint` = la même fenêtre, décision 7), `SingleInstancePerUser` (décision 8). Fenêtre de 960×620, redimensionnable jusqu'à 340×400. Capacités : `filesystem.private.read` et `.write` (le fichier de réglages, chantier 1) ; `notifications.post`, `filesystem.user-home.read` et `.write` (notifications et journaux, chantier 4). Chaque chantier ajoute celles que son code utilise : `network.real.access` et les ports réels au chantier 3 (après l'ADR 0235 §3 de Kazo OS), `apps.launch` au chantier 5. |
+| `IrcApp.cs` | Manifeste (`[AppManifest]`) : id `ca.kazo.irc`, nom « IRC », version `1.0.0`, éditeur `pub.kazo`, catégorie `communication` (décision 20), **ordinateur et mobile** (`MobileEntryPoint` = la même fenêtre, décision 7), `SingleInstancePerUser` (décision 8). Fenêtre de 960×620, redimensionnable jusqu'à 340×400. Capacités : `filesystem.private.read` et `.write` (réglages et réseaux, chantiers 1 et 3) ; `notifications.post`, `filesystem.user-home.read` et `.write` (notifications et journaux, chantier 4) ; `apps.launch` (chantier 5) ; `network.real.access` (dangereuse) et `network.simulated.write`, avec les ports réels `tcp/6697` et `tcp/6667` (`RealNetworkPorts`, chantier 3, ADR 0235 §3 de Kazo OS). |
 | `IrcWindow.razor`, `.razor.cs`, `.razor.css` | La fenêtre unique : barre d'outils (titre et sujet, boutons « Journaux » et « Police console »), trois colonnes, panneaux du mode compact, ligne d'état. Elle tient un `IrcChat`, suit le focus de la fenêtre, tient le compteur du titre et envoie `QUIT` quand elle se ferme (`IWindowCloseGuard`, décision 8). |
-| `Components/ChannelList` | Colonne de gauche : chaque réseau (pastille d'état), son onglet du serveur, ses salons et conversations privées, avec les pastilles de non-lus et de mentions et un × pour fermer ; les réseaux qu'on peut ouvrir. |
+| `Components/ChannelList` | Colonne de gauche : chaque réseau (pastille d'état), son onglet du serveur, ses salons et conversations privées, avec les pastilles de non-lus et de mentions et un × pour fermer ; les réseaux qu'on peut ouvrir, ceux du relais marqués « Serveur Kazo requis » (ou « Aucun serveur Kazo connecté ») ; le bouton « Gérer les réseaux ». |
+| `Components/NetworkEditor` | L'éditeur des réseaux (chantier 3) : liste, ajout, modification, suppression ; transport, pseudo, compte SASL, salons. |
+| `Net/` | Les fabriques des vrais transports : `KazoWebSocketTransportFactory` (WebSocket, sans serveur) et `KazoRelayTransportFactory` (relais TCP + TLS du serveur Kazo), avec la traduction des erreurs (chantier 3). |
 | `Components/MessagePane` (`.razor`, `.razor.cs`, `.razor.css`, `.razor.js`) | Colonne du milieu : les lignes (`role="log"`, la plus récente en bas) et la ligne de saisie avec historique et complétion des pseudos. |
 | `Components/UserList` | Colonne de droite : les utilisateurs du salon avec leur préfixe ; un clic ouvre une conversation privée. |
 | `Chat/` | La discussion sans Blazor (voir « Discussion » plus bas) : `IrcChat`, `IrcSession`, `Conversation`, `ChatLine`, `IrcNetwork` et `IIrcTransportFactory`, `IrcMentions`, `IrcNick`, `InputHistory`, `NickCompleter`, `IIrcNotifier` / `KazoIrcNotifier`, `DemoNetwork` (sous `IRC_DEMO`). |
 | `Logs/` | `IrcLog` (chemins, noms sûrs, format des lignes) et `IrcLogWriter` (écrit dans l'ordre). |
 | `Layout/IrcLayout.cs`, `IrcPanel.cs` | Quel panneau latéral est ouvert en mode compact (aucun, salons ou utilisateurs ; un seul à la fois). |
 | `Settings/IrcSettings.cs` | `~/.config/ca.kazo.irc/settings.json` : la police console (décision 19) et les journaux (`logsEnabled`, activés par défaut, décision 15). Un fichier absent, illisible ou cassé donne les valeurs par défaut ; un champ inconnu (ajouté par un chantier suivant) est ignoré. |
+| `Settings/IrcNetworkList.cs`, `IrcNetworkDraft.cs` | `~/.config/ca.kazo.irc/networks.json` : les réseaux, les réseaux proposés, les vérifications de l'éditeur (chantier 3). |
+| `Settings/IIrcSecretStore.cs` | Les mots de passe SASL dans le trousseau de l'OS (`KazoIrcSecretStore` sur `KazoKeyring`), jamais dans un fichier. |
 | `Settings/IIrcFileSystem.cs`, `KazoIrcFileSystem.cs`, `AppScopedFileSystem.cs` | Lecture, écriture et ajout en fin des fichiers de l'app ; une version en mémoire sert aux tests. `AppScopedFileSystem` entre dans le contexte de l'app pour les écritures faites depuis la boucle de lecture du client (voir « Journaux »). |
 | `Resources/Strings*.resx` | Les textes de l'interface, en anglais et en français (ADR 0104). |
 | `Resources/AppManifest.fr.resx` | Nom et description en français, écrits dans `localization/fr.json` par le build. |
@@ -193,6 +197,80 @@ de bout en bout. `Kazo.Irc` référence alors `Kazo.Irc.Demo` et définit
 paquets compilent Release sans lui : le paquet n'a ni `Kazo.Irc.Demo.dll` ni le
 code de démonstration.
 
+## Connexion aux vrais réseaux (chantier 3)
+
+Deux chemins vers un vrai réseau (décisions 3, 4 et 11, ADR 0235 de Kazo OS),
+choisis par réseau dans `networks.json` (`transport`) :
+
+| Transport | Code | Serveur Kazo | Comment |
+| --- | --- | --- | --- |
+| `websocket` | `Net/KazoWebSocketTransportFactory` → `WebSocketIrcTransport` | **pas besoin** | `KazoClientWebSocket` (le WebSocket du navigateur, ADR 0235 §1) avec le sous-protocole `text.ircv3.net` : un message WebSocket = une ligne, sans CR LF. Un message en plusieurs trames est remis ensemble ; un message de plus de 16 Kio est jeté ; un message binaire ou en Latin-1 passe par le repli d'`IrcEncoding`. |
+| `relay` | `Net/KazoRelayTransportFactory` → `StreamIrcTransport` | **requis** | `KazoTcpClient.ConnectAsync(hôte, port, new KazoTcpConnectOptions { UseTls, TargetHost }, ct)` : le relais du serveur Kazo ouvre TCP, et TLS quand `tls` est vrai (6697 par défaut, décision 4) en vérifiant le certificat. Lignes finies par CR LF, coupées par `IrcLineBuffer`. |
+| `demo` | `Chat/DemoNetwork.cs` | non | Le réseau de démonstration en mémoire, seulement avec `IrcDemoNetwork=true` (Debug, E2E). |
+
+Les deux transports réels demandent `network.real.access` (capacité
+dangereuse : un administrateur l'approuve au premier lancement, avec les ports
+`tcp/6697` et `tcp/6667` déclarés par `IrcApp.RealNetworkPorts`) ; le relais
+demande aussi `network.simulated.write` (normale), parce que `KazoTcpClient`
+ouvre une socket de la pile réseau de l'OS. Après l'approbation, l'accord avec
+ses ports part au serveur Kazo connecté (ADR 0233), dont `BlockedPorts` garde
+le dernier mot. L'éditeur refuse un autre port pour le relais
+(`IrcNetworkList.DeclaredPorts`). Chaque connexion entre dans le contexte de
+l'app (`KazoExecutionContext.Enter`), parce que la boucle du client tourne hors
+des flux de l'OS.
+
+**Erreurs claires.** Chaque fabrique traduit les erreurs du SDK en
+`IrcTransportException` (bibliothèque du protocole), avec un code
+d'`IrcTransportErrors` et `IsPermanent`. Le client montre le code
+(`IrcClientError.Code`) ; un échec permanent arrête la reconnexion, un autre
+est réessayé avec le délai croissant. `IrcSession` remplace le code par une
+phrase traduite (`IrcChatTexts.TransportErrors`, clés `Error*` des
+ressources) :
+
+| Ce qui arrive | Code | Réessayé |
+| --- | --- | --- |
+| l'app n'a pas `network.real.access` (`UnauthorizedAccessException`) | `NO_PERMISSION` | non |
+| relais : « hôte introuvable » (pas de serveur Kazo, relais arrêté, ou l'accord ne lui est pas encore arrivé) | `NO_SERVER` | non |
+| relais : connexion refusée (le serveur IRC, ou un port dans `BlockedPorts`) | `REFUSED` | oui |
+| relais : certificat TLS refusé (`AuthenticationException`) | `CERTIFICATE_REFUSED` | non |
+| WebSocket : adresse du réseau simulé (refusée par l'OS) | `SIMULATED_HOST` | non |
+| autre échec (le navigateur ne dit pas pourquoi un WebSocket échoue) | `UNREACHABLE` | oui |
+| connexion perdue après l'ouverture | `LOST` | oui |
+| pas de WebSocket ni de TCP ici (Web Worker) | `NOT_SUPPORTED` | non |
+
+**Détecter le serveur Kazo.** Une app ne peut pas demander à l'OS si un serveur
+Kazo est connecté sans `server.connection.manage` (dangereuse). IRC **essaie
+donc à la demande** (choix de Benoit, 2026-11-07) : les réseaux `relay` sont
+marqués « Serveur Kazo requis » dans la liste ; un échec `NO_SERVER` les marque
+« Aucun serveur Kazo connecté » (`IrcChat.RelayUnavailable`) jusqu'au prochain
+essai. Une API légère du SDK est demandée dans [Os#418](https://github.com/Kazo-ca/Os/issues/418).
+Une session arrêtée (échec permanent ou `QUIT`) peut être rouverte depuis le
+bouton « + Se connecter » : `IrcChat.Connect` crée une nouvelle session avec les
+réglages du moment.
+
+**Réseaux proposés** (`IrcNetworkList.Proposed`, au premier lancement) :
+
+| Réseau | Transport | Pourquoi |
+| --- | --- | --- |
+| Libera.Chat | `relay`, `irc.libera.chat:6697` TLS | pas de WebSocket IRC public : sa passerelle web (`web.libera.chat`) refuse les autres origines. |
+| OFTC | `relay`, `irc.oftc.net:6697` TLS | pas de WebSocket IRC : son webchat passe par Socket.IO, pas par `text.ircv3.net`. |
+| UnrealIRCd | `websocket`, `wss://irc.unrealircd.org/` | accepte `text.ircv3.net` (vérifié le 2026-11-07 : poignée de main WebSocket et enregistrement IRC depuis le conteneur de développement ; [documentation WebSocket d'UnrealIRCd](https://www.unrealircd.org/docs/WebSocket_support)). Fonctionne sans serveur Kazo. |
+
+**Éditeur des réseaux** (`Components/NetworkEditor`, bouton « Gérer les
+réseaux » sous la liste) : nom, transport (WebSocket, ou « Par le serveur
+Kazo » avec hôte, port et TLS), pseudo (vide = le nom d'utilisateur de l'OS,
+décision 12), compte et mot de passe SASL, salons rejoints à la connexion.
+`IrcNetworkDraft` tient les champs ; `IrcNetworkList.Validate` refuse un nom
+vide ou pris, une adresse qui n'est pas `wss://` ou `ws://`, un hôte vide, un
+port hors des ports déclarés, un pseudo ou un salon invalide. Il écrit
+`~/.config/ca.kazo.irc/networks.json` (`IrcNetworkList.SaveAsync`) ; un
+fichier absent ou cassé donne les réseaux proposés.
+
+**Mot de passe SASL.** Jamais dans `networks.json` : il va dans le trousseau de
+l'OS (`KazoKeyring`, entrée `sasl/<id du réseau>`, `KazoIrcSecretStore`, sans
+capacité). Le champ vide garde le mot de passe enregistré ; retirer le compte
+l'efface. Un trousseau verrouillé est dit dans la ligne d'état.
+
 ## Liens et mise en forme (chantier 5)
 
 Le texte d'une ligne (message, action, avis, activité, sujet du salon dans la
@@ -254,7 +332,7 @@ public interface IIrcTransport : IAsyncDisposable
 ```
 
 Le client demande un **nouveau** transport à sa fabrique à chaque tentative de
-connexion. Le chantier 3 écrit deux transports : WebSocket
+connexion. Le chantier 3 a écrit deux transports : WebSocket
 (`KazoClientWebSocket`, sous-protocole `text.ircv3.net`, une trame = une ligne)
 et le relais TCP (`KazoTcpClient`, lignes finies par CR LF et coupées par
 `IrcLineBuffer`). `FakeIrcTransport` joue le serveur à la main :
@@ -324,8 +402,8 @@ dotnet test Kazo.Irc.slnx
 | Suite | Commande | Contenu |
 | --- | --- | --- |
 | Protocole (xUnit) | `dotnet test Kazo.Irc.slnx` | voir « Tests du protocole » ci-dessus. |
-| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifeste (classe et `manifest.json` produit, textes français, icône, capacités), textes anglais et français complets, panneaux du mode compact, réglages (chemin, défauts, fichier cassé ou refusé, champ inconnu, écriture qui échoue, option des journaux) ; discussion sur le serveur de démonstration avec une fausse horloge (connexion, salon, messages, mentions, messages privés, non-lus, compteur du titre, notifications avec et sans le focus, lignes refusées, fermeture, `QUIT`) ; mentions, pseudo par défaut, historique, complétion ; journaux (chemins, noms hostiles, format, fuseau, option, écriture qui échoue, codes retirés) ; le serveur de démonstration ; liens (ponctuation, parenthèses, schémas refusés, balises et guillemets venus du réseau), segments et classes CSS des styles, notification sans codes. |
-| Bout en bout | `npm run test:e2e` après `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | dans l'hôte, profil neuf : trois colonnes côte à côte sur ordinateur dans le thème de l'OS ; police console gardée après fermeture et réouverture ; sur un Pixel 7, une colonne et les deux panneaux ; `chat.e2e.mjs` : connexion au réseau de démonstration, `/join #kazo`, envoyer et recevoir, historique et Tab, une mention pendant que le Terminal a le focus donne une notification de l'OS et « (1) IRC », le journal lu avec `cat` dans le Terminal, un message privé compté, fermeture de la fenêtre, la discussion sur un Pixel 7 ; `!links` : deux liens sans la ponctuation autour, gras, couleur et italique dessinés, balises affichées en texte, le clic ouvre le Navigateur de l'OS sur l'adresse sans quitter la page. |
+| C# (xUnit) | `dotnet test Kazo.Irc.slnx -c Release` | manifeste (classe et `manifest.json` produit, textes français, icône, capacités), textes anglais et français complets, panneaux du mode compact, réglages (chemin, défauts, fichier cassé ou refusé, champ inconnu, écriture qui échoue, option des journaux) ; discussion sur le serveur de démonstration avec une fausse horloge (connexion, salon, messages, mentions, messages privés, non-lus, compteur du titre, notifications avec et sans le focus, lignes refusées, fermeture, `QUIT`) ; mentions, pseudo par défaut, historique, complétion ; journaux (chemins, noms hostiles, format, fuseau, option, écriture qui échoue, codes retirés) ; le serveur de démonstration ; liens (ponctuation, parenthèses, schémas refusés, balises et guillemets venus du réseau), segments et classes CSS des styles, notification sans codes ; vrais réseaux (chantier 3) : fabriques WebSocket et relais (adresse, hôte, traduction de chaque erreur), `networks.json` (réseaux proposés, fichier cassé ou refusé, aller-retour sans mot de passe, entrées inutilisables, vérifications, id, salons), champs de l'éditeur et mot de passe SASL, chat (« aucun serveur Kazo », session rouverte, échec réessayé, SASL passé au client). Protocole : transports WebSocket (faux `WebSocket`) et flux (faux flux), échec permanent non réessayé, `MessageHandled` après la mise à jour du modèle ; chat : les utilisateurs et le sujet envoyés après le `JOIN` redessinent la fenêtre. |
+| Bout en bout | `npm run test:e2e` après `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true` | dans l'hôte, profil neuf : trois colonnes côte à côte sur ordinateur dans le thème de l'OS ; police console gardée après fermeture et réouverture ; sur un Pixel 7, une colonne et les deux panneaux ; `chat.e2e.mjs` : connexion au réseau de démonstration, `/join #kazo`, envoyer et recevoir, historique et Tab, une mention pendant que le Terminal a le focus donne une notification de l'OS et « (1) IRC », le journal lu avec `cat` dans le Terminal, un message privé compté, fermeture de la fenêtre, la discussion sur un Pixel 7 ; `!links` : deux liens sans la ponctuation autour, gras, couleur et italique dessinés, balises affichées en texte, le clic ouvre le Navigateur de l'OS sur l'adresse sans quitter la page ; `websocket.e2e.mjs` (chantier 3) : approbation de `network.real.access` par l'administrateur, notes « Serveur Kazo requis », réseau ajouté dans l'éditeur et connecté par WebSocket à un serveur IRC joué par le test (`routeWebSocket` de Playwright, aucun vrai réseau), salon automatique, envoyer et recevoir ; Libera.Chat sans serveur Kazo donne le message clair et « Aucun serveur Kazo connecté ». Le relais n'a pas d'essai de bout en bout : l'hôte n'est pas un serveur Kazo. |
 
 Les tests de bout en bout démarrent l'hôte (`dotnet run --no-build -c Release`)
 sur un port libre, ou utilisent `IRC_BASE_URL`.
@@ -336,6 +414,7 @@ sur un port libre, ou utilisent `IRC_BASE_URL`.
 | --- | --- |
 | 1. `irc/1-solution` | Solution, hôte, CI, manifeste, icône, fenêtre et mise en page vides, police console, tests. |
 | 2. `irc/2-protocol` | Bibliothèque `Kazo.Irc.Protocol` et ses tests (section « Protocole » ci-dessus). |
+| 3. `irc/3-connect` | Vrais réseaux par WebSocket et par le relais du serveur Kazo, erreurs claires, `networks.json` et son éditeur, mot de passe SASL dans le trousseau, sous-module sur v3.2.0 (section « Connexion aux vrais réseaux » ci-dessus). |
 | 4. `irc/4-notifications-and-logs` | La discussion branchée à la fenêtre sur le réseau de démonstration, notifications et compteur du titre, journaux (section « Discussion » ci-dessus). |
 | 5. `irc/5-links` | Adresses web cliquables ouvertes dans le Navigateur, codes de mise en forme IRC dessinés ou retirés (section « Liens et mise en forme » ci-dessus). |
 
@@ -349,6 +428,19 @@ sur un port libre, ou utilisent `IRC_BASE_URL`.
 - [x] Commandes de saisie `/join /part /msg /me /nick /topic /whois /away /quit /query /raw`.
 - [x] Tests xUnit.
 - [x] Branchement à l'interface : fait au chantier 4 (avec le réseau de démonstration) ; les vrais transports viennent au chantier 3.
+
+## Tâches du chantier 3
+
+- [x] Sous-module `external/KazoOs` et paquets `Kazo.Os.*` sur v3.2.0. Os#407 et Os#408 restent ouvertes : les contournements (`KazoIrcFileSystem`, `.mobile-shell .irc-toolbar`) sont gardés.
+- [x] `WebSocketIrcTransport` et `StreamIrcTransport` (protocole), `IrcTransportException` ; un échec permanent arrête la reconnexion.
+- [x] Fabriques `KazoWebSocketTransportFactory` et `KazoRelayTransportFactory`, erreurs traduites en phrases claires.
+- [x] Capacités `network.real.access` et `network.simulated.write`, ports `tcp/6697` et `tcp/6667`.
+- [x] Serveur Kazo essayé à la demande, notes « Serveur Kazo requis » et « Aucun serveur Kazo connecté » ; [Os#418](https://github.com/Kazo-ca/Os/issues/418) pour une API de détection.
+- [x] Réseaux proposés (Libera.Chat, OFTC, UnrealIRCd par WebSocket, vérifiés), `networks.json`, éditeur.
+- [x] Pseudo par défaut = nom d'utilisateur de l'OS ; mot de passe SASL dans `KazoKeyring`.
+- [x] Fenêtre redessinée après les réponses qui changent un salon sans ligne (`IrcClient.MessageHandled` : fin de `NAMES`, sujet, modes), qu'un vrai réseau envoie après que le `JOIN` est dessiné.
+- [x] Tests xUnit et Playwright (WebSocket par `routeWebSocket`, approbation de l'administrateur) ; le relais sans essai de bout en bout (pas de serveur Kazo de test).
+- [x] Docs (fr, en), README, avancement du plan.
 
 ## Tâches du chantier 4
 

@@ -1,0 +1,257 @@
+/* The network editor: a panel over the window, in the OS theme (decision 19). */
+.network-editor {
+    position: absolute;
+    inset: 24px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    max-width: 560px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-md, 6px);
+    background: var(--kos-bg-surface, #161b22);
+    color: var(--kos-text-primary, #e6edf3);
+    box-shadow: 0 18px 48px rgb(0 0 0 / 45%), 0 0 0 1px var(--kos-accent-subtle, rgb(66 211 146 / 12%));
+}
+
+.network-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--kos-border, #30363d);
+}
+
+.network-editor-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+}
+
+.network-editor-close {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: var(--kos-radius-md, 6px);
+    background: transparent;
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.network-editor-close:hover {
+    color: var(--kos-text-primary, #e6edf3);
+}
+
+.network-editor-hint,
+.network-field-hint {
+    margin: 0;
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 0.8rem;
+}
+
+.network-editor-hint {
+    padding: 10px 16px 0;
+}
+
+.network-editor-list {
+    flex: 1;
+    margin: 0;
+    padding: 8px 8px 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.network-editor-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+    padding: 8px;
+    border-radius: var(--kos-radius-md, 6px);
+}
+
+.network-editor-row:hover {
+    background: var(--kos-accent-subtle, rgb(66 211 146 / 8%));
+}
+
+.network-editor-name {
+    font-weight: 600;
+}
+
+.network-editor-route {
+    grid-row: 2;
+    color: var(--kos-text-muted, #8b949e);
+    font-family: var(--kos-font-mono, monospace);
+    font-size: 0.75rem;
+}
+
+.network-editor-actions {
+    display: flex;
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-items: center;
+    gap: 6px;
+}
+
+.network-editor-form {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 0;
+    overflow-y: auto;
+}
+
+.network-field {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.network-field > span,
+.network-transport legend {
+    color: var(--kos-text-secondary, #c9d1d9);
+    font-weight: 600;
+}
+
+.network-field input[type="text"],
+.network-field input[type="url"],
+.network-field input[type="password"] {
+    padding: 6px 8px;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-md, 6px);
+    background: var(--kos-bg-base, #0d1117);
+    color: var(--kos-text-primary, #e6edf3);
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.network-field input:focus-visible {
+    border-color: var(--kos-accent, #42d392);
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: -1px;
+}
+
+.network-transport {
+    padding: 0;
+    border: 0;
+}
+
+.network-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-md, 6px);
+    cursor: pointer;
+}
+
+.network-choice:has(input:checked) {
+    border-color: var(--kos-accent, #42d392);
+    background: var(--kos-accent-subtle, rgb(66 211 146 / 8%));
+}
+
+.network-choice small {
+    display: block;
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 0.75rem;
+}
+
+.network-row {
+    display: flex;
+    gap: 10px;
+}
+
+.network-port {
+    flex: 0 0 6rem;
+}
+
+.network-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.network-problems {
+    margin: 0;
+    padding: 8px 8px 8px 26px;
+    border-left: 3px solid var(--kos-error, #f85149);
+    background: rgb(248 81 73 / 8%);
+    color: var(--kos-error, #f85149);
+    font-size: 0.8rem;
+}
+
+.network-editor-footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: auto;
+    padding: 12px 16px;
+    border-top: 1px solid var(--kos-border, #30363d);
+    background: var(--kos-bg-surface, #161b22);
+}
+
+.network-editor-form .network-editor-footer {
+    margin: auto -16px 0;
+}
+
+.network-editor-button {
+    min-height: var(--kos-btn-min-height, 2rem);
+    padding: 4px 12px;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-btn-radius, var(--kos-radius-md, 6px));
+    background: transparent;
+    color: var(--kos-text-primary, #e6edf3);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color var(--kos-transition-fast, 120ms), background var(--kos-transition-fast, 120ms);
+}
+
+.network-editor-button:hover {
+    border-color: var(--kos-accent, #42d392);
+}
+
+.network-editor-button.primary {
+    border-color: var(--kos-accent, #42d392);
+    background: var(--kos-accent, #42d392);
+    color: var(--kos-bg-base, #0d1117);
+    font-weight: 600;
+}
+
+.network-editor-button.danger:hover {
+    border-color: var(--kos-error, #f85149);
+    color: var(--kos-error, #f85149);
+}
+
+.network-editor-button:focus-visible,
+.network-editor-close:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: 1px;
+}
+
+/* A narrow window or a phone: the editor takes the whole window. */
+@container irc-window (max-width: 719.98px) {
+    .network-editor {
+        inset: 0;
+        max-width: none;
+        border-radius: 0;
+    }
+
+    .network-row {
+        flex-direction: column;
+    }
+
+    .network-port {
+        flex: none;
+    }
+}

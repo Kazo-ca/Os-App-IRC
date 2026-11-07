@@ -36,4 +36,15 @@ public static class IrcNick
         var nick = builder.Length > MaxLength ? builder.ToString(0, MaxLength) : builder.ToString();
         return nick.Length == 0 ? Fallback : nick;
     }
+
+    /// <summary>
+    /// Whether a nickname typed in the network editor can be sent: ASCII nickname characters only,
+    /// not starting with a digit or a dash, 32 at most (networks cut longer ones themselves).
+    /// </summary>
+    /// <param name="nick">The nickname.</param>
+    /// <returns>True when it is valid.</returns>
+    public static bool IsValid(string? nick) =>
+        nick is { Length: > 0 and <= 32 }
+        && !char.IsAsciiDigit(nick[0]) && nick[0] != '-'
+        && nick.All(c => char.IsAscii(c) && IrcMentions.IsNickChar(c));
 }
