@@ -2,9 +2,9 @@
 
 # Plan : l'app IRC pour Kazo OS
 
-Plan proposé le 2026-11-07 après le débat avec Benoit (fil « Planifier l'app
-IRC »). Ce document fixe le but, les décisions et l'ordre des choses à faire.
-Rien n'est codé.
+Plan **validé le 2026-11-07** par Benoit (fil « Planifier l'app IRC », plan
+fusionné par la PR #3). Ce document fixe le but, les décisions et l'ordre des
+choses à faire ; l'avancement est en fin de page.
 
 ## But
 
@@ -87,3 +87,21 @@ Comme Webamp : tests C# (xUnit) du protocole (analyse des messages et des tags, 
 - Serveur IRC simulé : [#1](https://github.com/Kazo-ca/Os-App-IRC/issues/1) (après [Os#393](https://github.com/Kazo-ca/Os/issues/393)).
 - Liens `irc://` et `ircs://` : [#2](https://github.com/Kazo-ca/Os-App-IRC/issues/2) (après [Os#394](https://github.com/Kazo-ca/Os/issues/394)).
 - DCC, aperçu des images, autres mécanismes SASL.
+
+## Avancement
+
+Le 2026-11-07, Benoit a lancé les chantiers. Série `irc/base` (créée depuis
+`main`), une PR par chantier vers `irc/base`, puis une PR `irc/base` → `main`
+que Benoit fusionne. Côté Kazo OS, série `real-network/base` (ADR 0235).
+
+| Chantier | Branche | Dépend de | État |
+| --- | --- | --- | --- |
+| Kazo OS 1 : `KazoClientWebSocket` | `real-network/1-websocket` (Kazo-ca/Os) | rien | À faire |
+| Kazo OS 2 : TLS par le relais | `real-network/2-relay-tls` (Kazo-ca/Os) | rien | À faire |
+| Kazo OS 3 : ports déclarés, `BlockedPorts` | `real-network/3-declared-ports` (Kazo-ca/Os) | rien | À faire |
+| 1. Solution, manifeste, fenêtre, mise en page ordinateur et mobile | `irc/1-solution` | rien | À faire |
+| 2. Protocole IRC, IRCv3, faux transport | `irc/2-protocol` | rien | À faire |
+| 3. Connexion WebSocket et relais, réseaux, SASL | `irc/3-connect` | 1, 2, version de l'OS avec l'ADR 0235 | À faire |
+| 4. Notifications et journaux | `irc/4-notifications-and-logs` | 1, 2 | À faire |
+| 5. Liens web | `irc/5-links` | 1, 2 | À faire |
+| 6. Fiche du Store, `v1.0.0` | `irc/6-store` | 3, 4, 5 | À faire |
