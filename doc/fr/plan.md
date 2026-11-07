@@ -99,7 +99,7 @@ que Benoit fusionne. Côté Kazo OS, série `real-network/base` (ADR 0235).
 | Kazo OS 1 : `KazoClientWebSocket` | `real-network/1-websocket` (Kazo-ca/Os) | rien | À faire |
 | Kazo OS 2 : TLS par le relais | `real-network/2-relay-tls` (Kazo-ca/Os) | rien | À faire |
 | Kazo OS 3 : ports déclarés, `BlockedPorts` | `real-network/3-declared-ports` (Kazo-ca/Os) | rien | À faire |
-| 1. Solution, manifeste, fenêtre, mise en page ordinateur et mobile | `irc/1-solution` | rien | À faire |
+| 1. Solution, manifeste, fenêtre, mise en page ordinateur et mobile | `irc/1-solution` | rien | Fait ([#5](https://github.com/Kazo-ca/Os-App-IRC/pull/5)) |
 | 2. Protocole IRC, IRCv3, faux transport | `irc/2-protocol` | rien | Fait ([#4](https://github.com/Kazo-ca/Os-App-IRC/pull/4)) |
 | 3. Connexion WebSocket et relais, réseaux, SASL | `irc/3-connect` | 1, 2, version de l'OS avec l'ADR 0235 | À faire |
 | 4. Notifications et journaux | `irc/4-notifications-and-logs` | 1, 2 | À faire |

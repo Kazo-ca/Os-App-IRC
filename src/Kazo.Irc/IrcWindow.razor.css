@@ -1,0 +1,295 @@
+/*
+ * The IRC window, in the OS theme (decision 19): a thin toolbar, then three columns (networks and
+ * channels, messages, users). When the window is narrower than 720px (IrcApp.CompactWidth: a phone,
+ * a narrow window) the messages fill it and the two side columns become panels that slide over
+ * them, opened from the toolbar (decision 7). A container query cannot style its own container,
+ * so .irc-window is the container and .irc-frame holds the layout.
+ */
+.irc-window {
+    /* The font of the messages and lists: the OS's interface font, or its monospace font. */
+    --irc-text-font: var(--kos-font-ui, system-ui, sans-serif);
+    --irc-side-width: 220px;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 20% 0%, var(--kos-accent-subtle, rgba(66, 211, 146, 0.07)), transparent 55%),
+        var(--kos-bg-base, #0d1117);
+    color: var(--kos-text-primary, #e6edf3);
+    font-family: var(--kos-font-ui, system-ui, sans-serif);
+    container-type: inline-size;
+    container-name: irc-window;
+}
+
+.irc-window.monospace {
+    --irc-text-font: var(--kos-font-mono, 'Cascadia Mono', Consolas, monospace);
+}
+
+.irc-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Toolbar */
+
+.irc-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--kos-toolbar-bg, var(--kos-bg-surface, #161b22));
+    border-bottom: 1px solid var(--kos-toolbar-border, var(--kos-border, #30363d));
+}
+
+.irc-brand {
+    font-family: var(--kos-font-mono, 'Consolas', monospace);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--kos-accent, #42d392);
+    text-shadow: 0 0 10px var(--kos-accent-glow, transparent);
+}
+
+.irc-title {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--kos-text-secondary, var(--kos-text-primary, #c9d1d9));
+}
+
+.irc-spacer {
+    flex: 1;
+}
+
+.irc-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--kos-btn-min-height, 30px);
+    padding: var(--kos-btn-padding, 4px 10px);
+    background: var(--kos-btn-bg, #21262d);
+    color: var(--kos-btn-color, inherit);
+    border: 1px solid var(--kos-btn-border, var(--kos-border, #30363d));
+    border-radius: var(--kos-btn-radius, 6px);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: var(--kos-btn-font-weight, 600);
+    cursor: pointer;
+    transition: background var(--kos-transition-fast, 120ms), border-color var(--kos-transition-fast, 120ms);
+}
+
+.irc-tool:hover {
+    background: var(--kos-btn-hover-bg, #30363d);
+    border-color: var(--kos-btn-hover-border, var(--kos-accent, #42d392));
+}
+
+.irc-tool:focus-visible,
+.irc-panel-close:focus-visible,
+.irc-status-dismiss:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: 1px;
+}
+
+.irc-tool[aria-pressed="true"],
+.irc-tool[aria-expanded="true"] {
+    border-color: var(--kos-accent, #42d392);
+    color: var(--kos-text-accent, var(--kos-accent, #42d392));
+    background: var(--kos-accent-subtle, rgba(66, 211, 146, 0.12));
+}
+
+.irc-tool-icon {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* The side panels' buttons only exist in the compact layout. */
+.irc-panel-toggle {
+    display: none;
+}
+
+/*
+ * On a phone the mobile shell keeps a transparent strip at the top of every app for its
+ * notification shade (.mobile-shade-handle, 1.75rem, above the app): the toolbar starts under it so
+ * its buttons can be pressed. Scoped CSS only marks the last selector, so the shell's class can be
+ * named here.
+ */
+.mobile-shell .irc-toolbar {
+    padding-top: calc(6px + 1.75rem);
+}
+
+/* Columns */
+
+.irc-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: var(--irc-side-width) minmax(0, 1fr) var(--irc-side-width);
+}
+
+.irc-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--kos-bg-surface, #161b22);
+}
+
+.irc-channels {
+    border-right: 1px solid var(--kos-border, #30363d);
+}
+
+.irc-users {
+    border-left: 1px solid var(--kos-border, #30363d);
+}
+
+.irc-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--kos-border, #30363d);
+}
+
+.irc-column-header h2 {
+    margin: 0;
+    font-family: var(--kos-font-mono, 'Consolas', monospace);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--kos-text-muted, #8b949e);
+}
+
+.irc-panel-close {
+    display: none;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--kos-radius-md, 6px);
+    background: transparent;
+    color: var(--kos-text-secondary, #c9d1d9);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.irc-conversation {
+    min-width: 0;
+    min-height: 0;
+}
+
+.irc-scrim {
+    display: none;
+}
+
+/* Status line (a settings file that could not be written). */
+
+.irc-status {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 64px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--kos-error, #f85149);
+    border-radius: var(--kos-radius-md, 6px);
+    background: var(--kos-card-bg, #161b22);
+    color: var(--kos-error, #f85149);
+    font-size: 0.85rem;
+    z-index: 3;
+}
+
+.irc-status-text {
+    flex: 1;
+}
+
+.irc-status-dismiss {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+/* Compact layout: one column, the side columns slide over the messages. */
+
+@container irc-window (max-width: 719.98px) {
+    .irc-panel-toggle {
+        display: inline-flex;
+    }
+
+    /* Room for the title: the buttons keep their icon only. */
+    .irc-tool span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .irc-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .irc-column {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: min(82%, 300px);
+        z-index: 2;
+        visibility: hidden;
+        box-shadow: 0 0 24px rgba(0, 0, 0, 0.5);
+        transition: transform var(--kos-transition-normal, 180ms) ease, visibility 0s linear var(--kos-transition-normal, 180ms);
+    }
+
+    .irc-channels {
+        left: 0;
+        transform: translateX(-100%);
+    }
+
+    .irc-users {
+        right: 0;
+        transform: translateX(100%);
+    }
+
+    .irc-column.open {
+        visibility: visible;
+        transform: none;
+        transition: transform var(--kos-transition-normal, 180ms) ease;
+    }
+
+    .irc-panel-close {
+        display: inline-block;
+    }
+
+    .irc-scrim {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border: none;
+        padding: 0;
+        background: rgba(0, 0, 0, 0.45);
+        cursor: default;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .irc-column,
+    .irc-column.open {
+        transition: none;
+    }
+}

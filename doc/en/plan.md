@@ -100,7 +100,7 @@ that Benoit merges. On the Kazo OS side, series `real-network/base`
 | Kazo OS 1: `KazoClientWebSocket` | `real-network/1-websocket` (Kazo-ca/Os) | nothing | To do |
 | Kazo OS 2: TLS by the relay | `real-network/2-relay-tls` (Kazo-ca/Os) | nothing | To do |
 | Kazo OS 3: declared ports, `BlockedPorts` | `real-network/3-declared-ports` (Kazo-ca/Os) | nothing | To do |
-| 1. Solution, manifest, window, desktop and mobile layout | `irc/1-solution` | nothing | To do |
+| 1. Solution, manifest, window, desktop and mobile layout | `irc/1-solution` | nothing | Done ([#5](https://github.com/Kazo-ca/Os-App-IRC/pull/5)) |
 | 2. IRC protocol, IRCv3, fake transport | `irc/2-protocol` | nothing | Done ([#4](https://github.com/Kazo-ca/Os-App-IRC/pull/4)) |
 | 3. WebSocket and relay connection, networks, SASL | `irc/3-connect` | 1, 2, OS release with ADR 0235 | To do |
 | 4. Notifications and logs | `irc/4-notifications-and-logs` | 1, 2 | To do |

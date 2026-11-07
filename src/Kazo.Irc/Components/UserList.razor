@@ -1,0 +1,11 @@
+@* The users of the current channel (right column, or the right panel on a phone). Work item 1
+   shows the empty list; the channel model of work item 2 fills it. *@
+<div class="user-list">
+    <p class="user-list-empty">@EmptyText</p>
+</div>
+
+@code {
+    /// <summary>Gets or sets the text shown while no channel is open.</summary>
+    [Parameter, EditorRequired]
+    public string EmptyText { get; set; } = string.Empty;
+}

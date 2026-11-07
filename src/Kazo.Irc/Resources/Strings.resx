@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppLabel" xml:space="preserve">
+    <value>IRC chat</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Channels</value>
+  </data>
+  <data name="ClosePanel" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="MessageLabel" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="MessagePlaceholder" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="MonospaceFont" xml:space="preserve">
+    <value>Console font</value>
+  </data>
+  <data name="MonospaceFontHint" xml:space="preserve">
+    <value>Show the messages in a monospace font</value>
+  </data>
+  <data name="Networks" xml:space="preserve">
+    <value>Networks</value>
+  </data>
+  <data name="NoConversation" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="NoConversationHint" xml:space="preserve">
+    <value>Join a network to start chatting.</value>
+  </data>
+  <data name="NoNetwork" xml:space="preserve">
+    <value>No network yet.</value>
+  </data>
+  <data name="NoUsers" xml:space="preserve">
+    <value>Nobody here yet.</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="SettingsSaveFailed" xml:space="preserve">
+    <value>The settings could not be saved: {0}</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+</root>
