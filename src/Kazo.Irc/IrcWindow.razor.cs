@@ -256,7 +256,8 @@ public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
             await KazoBrowser.OpenAsync(link.AbsoluteUri);
             _status = null;
         }
-        catch (Exception exception) when (exception is KazoAppLaunchException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException
+            or ArgumentException or OperationCanceledException or Microsoft.JSInterop.JSException)
         {
             _status = string.Format(CultureInfo.CurrentCulture, L["LinkFailed"], link.AbsoluteUri, exception.Message);
         }

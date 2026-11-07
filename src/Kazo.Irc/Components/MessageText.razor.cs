@@ -3,6 +3,7 @@ using System.Text;
 using Kazo.Irc.Protocol.Text;
 using Kazo.Irc.Text;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Kazo.Irc.Components;
 
@@ -91,4 +92,7 @@ public sealed partial class MessageText
     }
 
     private Task OpenAsync(Uri link) => OnOpenLink?.Invoke(link) ?? Task.CompletedTask;
+
+    /// <summary>Enter opens a focused link, as it does for a real link.</summary>
+    private Task OnKeyDownAsync(KeyboardEventArgs e, Uri link) => e.Key == "Enter" ? OpenAsync(link) : Task.CompletedTask;
 }

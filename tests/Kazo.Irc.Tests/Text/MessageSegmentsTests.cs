@@ -35,15 +35,22 @@ public sealed class MessageSegmentsTests
     }
 
     [Fact]
-    public void A_link_whose_style_changes_midway_stays_one_link()
+    public void A_formatting_code_ends_an_address()
     {
-        var segments = MessageSegments.Build("\u0002https://kazo\u0002.ca/x end");
+        var segments = MessageSegments.Build("\u0002https://kazo.ca\u0002hello");
 
-        var link = segments[0];
-        Assert.Equal("https://kazo.ca/x", link.Link?.AbsoluteUri);
-        Assert.Equal([new IrcTextRun("https://kazo", new IrcTextStyle(Bold: true)), new IrcTextRun(".ca/x", IrcTextStyle.Plain)], link.Runs);
-        Assert.Equal(" end", segments[1].Text);
+        Assert.Equal("https://kazo.ca/", segments[0].Link?.AbsoluteUri);
+        Assert.Equal([new IrcTextRun("https://kazo.ca", new IrcTextStyle(Bold: true))], segments[0].Runs);
+        Assert.Equal("hello", segments[1].Text);
         Assert.Null(segments[1].Link);
+    }
+
+    [Fact]
+    public void Codes_that_cancel_each_other_do_not_cut_an_address()
+    {
+        var link = Assert.Single(MessageSegments.Build("https://kazo\u0002\u0002.ca/x"));
+
+        Assert.Equal("https://kazo.ca/x", link.Link?.AbsoluteUri);
     }
 
     [Fact]

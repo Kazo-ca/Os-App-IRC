@@ -21,8 +21,8 @@ public sealed record MessageSegment(IReadOnlyList<IrcTextRun> Runs, Uri? Link)
 /// </summary>
 /// <remarks>
 /// Everything stays text: the window renders each run as a text node, so nothing from the network
-/// is ever read as HTML (<c>&lt;b&gt;</c> is shown as typed). A link whose text changes style midway
-/// stays one link, made of several runs.
+/// is ever read as HTML (<c>&lt;b&gt;</c> is shown as typed). A formatting code ends an address, so
+/// a link is always one run (styled when the codes wrap it: <c>\x02https://kazo.ca\x02</c>).
 /// </remarks>
 public static class MessageSegments
 {
@@ -38,12 +38,19 @@ public static class MessageSegments
 
         var runs = IrcFormatting.Parse(text);
         var plain = new StringBuilder(text.Length);
+        var breaks = new HashSet<int>();
         foreach (var run in runs)
         {
+            // Two runs meet where a formatting code stood: an address ends there.
+            if (plain.Length > 0)
+            {
+                breaks.Add(plain.Length);
+            }
+
             plain.Append(run.Text);
         }
 
-        var links = MessageLinks.Find(plain.ToString());
+        var links = MessageLinks.Find(plain.ToString(), breaks);
         if (links.Count == 0)
         {
             return runs.Count == 0 ? [] : [new MessageSegment(runs, null)];

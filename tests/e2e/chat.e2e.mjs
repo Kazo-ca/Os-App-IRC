@@ -129,8 +129,9 @@ test('web addresses open in the OS Browser; formatting is drawn, markup stays te
     // Two links, without the brackets and the full stop around them.
     const links = line.locator('a.message-link');
     assert.deepEqual(await links.allInnerTexts(), ['http://docs.hack/guide?topic=irc', 'https://kazo.ca/']);
-    assert.equal(await links.first().getAttribute('href'), 'http://docs.hack/guide?topic=irc');
-    assert.equal(await links.first().getAttribute('rel'), 'noopener noreferrer nofollow');
+    assert.equal(await links.first().getAttribute('title'), 'http://docs.hack/guide?topic=irc');
+    // No href: a middle click cannot hand the address to the host browser.
+    assert.equal(await links.first().getAttribute('href'), null);
 
     // The formatting codes are styles, never characters; the markup is text, not elements.
     assert.equal(await line.locator('.irc-b', { hasText: 'Links' }).count(), 1);

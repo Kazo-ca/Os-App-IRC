@@ -58,6 +58,8 @@ public sealed class MessageLinksTests
     [InlineData("irc://irc.libera.chat/#kazo")]
     [InlineData("www.kazo.ca")]
     [InlineData("http://")]
+    [InlineData("https://kazo.ca@evil.example/")]
+    [InlineData("https://user:pass@kazo.ca/")]
     public void Only_http_and_https_addresses_are_links(string? text)
     {
         Assert.Empty(MessageLinks.Find(text));

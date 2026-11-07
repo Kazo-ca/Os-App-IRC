@@ -15,7 +15,8 @@ public sealed record MessageLink(int Start, int Length, Uri Uri);
 /// </summary>
 /// <remarks>
 /// Only <c>http</c> and <c>https</c> are links: <c>javascript:</c>, <c>data:</c> or <c>file:</c>
-/// never become clickable. <c>irc://</c> waits for Kazo OS to associate URL schemes with apps
+/// never become clickable, nor an address with a user name (<c>https://kazo.ca@evil.example</c>
+/// reads like kazo.ca but goes to evil.example). <c>irc://</c> waits for Kazo OS to associate URL schemes with apps
 /// (issue #2).
 /// </remarks>
 public static class MessageLinks
@@ -30,8 +31,12 @@ public static class MessageLinks
 
     /// <summary>Finds the addresses in <paramref name="text"/>, in order.</summary>
     /// <param name="text">The message, its formatting codes already removed.</param>
+    /// <param name="breaks">
+    /// Positions in <paramref name="text"/> where a formatting code stood: an address ends there
+    /// (<c>\x02https://kazo.ca\x02hello</c> is <c>https://kazo.ca</c>, not <c>https://kazo.cahello</c>).
+    /// </param>
     /// <returns>The addresses; empty when there are none.</returns>
-    public static IReadOnlyList<MessageLink> Find(string? text)
+    public static IReadOnlyList<MessageLink> Find(string? text, IReadOnlySet<int>? breaks = null)
     {
         if (string.IsNullOrEmpty(text) || text.IndexOf("http", StringComparison.OrdinalIgnoreCase) < 0)
         {
@@ -56,7 +61,7 @@ public static class MessageLinks
             }
 
             var end = start + scheme;
-            while (end < text.Length && !EndsAddress(text[end]))
+            while (end < text.Length && !EndsAddress(text[end]) && !(breaks?.Contains(end) ?? false))
             {
                 end++;
             }
@@ -65,7 +70,8 @@ public static class MessageLinks
             if (end > start + scheme
                 && Uri.TryCreate(text[start..end], UriKind.Absolute, out var uri)
                 && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-                && uri.Host.Length > 0)
+                && uri.Host.Length > 0
+                && uri.UserInfo.Length == 0)
             {
                 links.Add(new MessageLink(start, end - start, uri));
                 i = end;
