@@ -90,6 +90,9 @@
   <data name="LogsFailed" xml:space="preserve">
     <value>The logs could not be written: {0}</value>
   </data>
+  <data name="LinkFailed" xml:space="preserve">
+    <value>The Browser could not open {0}: {1}</value>
+  </data>
   <data name="Connecting" xml:space="preserve">
     <value>Connecting to {0}...</value>
   </data>

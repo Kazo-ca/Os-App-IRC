@@ -108,6 +108,63 @@ test('a private message from the bot opens a conversation marked for the user', 
     await page.close();
 });
 
+test('web addresses open in the OS Browser; formatting is drawn, markup stays text (work item 5)', { timeout: 300_000 }, async () => {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('dialog', dialog => {
+        errors.push(`dialog: ${dialog.message()}`);
+        return dialog.dismiss();
+    });
+    await boot(page, host.baseUrl);
+    await openIrc(page);
+    await connectDemo(page);
+    await say(page, '/join #kazo');
+    await page.locator('.irc-title', { hasText: '#kazo' }).waitFor({ timeout: 15_000 });
+
+    await say(page, '!links');
+    const line = page.locator('.message-line', { hasText: 'Links:' }).last();
+    await line.waitFor({ timeout: 15_000 });
+
+    // Two links, without the brackets and the full stop around them.
+    const links = line.locator('a.message-link');
+    assert.deepEqual(await links.allInnerTexts(), ['http://docs.hack/guide?topic=irc', 'https://kazo.ca/']);
+    assert.equal(await links.first().getAttribute('title'), 'http://docs.hack/guide?topic=irc');
+    // No href: a middle click cannot hand the address to the host browser.
+    assert.equal(await links.first().getAttribute('href'), null);
+
+    // The formatting codes are styles, never characters; the markup is text, not elements.
+    assert.equal(await line.locator('.irc-b', { hasText: 'Links' }).count(), 1);
+    assert.equal(await line.locator('.irc-fg-4.irc-bg-1', { hasText: 'red' }).count(), 1);
+    assert.equal(await line.locator('.irc-i', { hasText: 'italics' }).count(), 1);
+    const text = await line.locator('.message-text').innerText();
+    assert.ok(text.includes('<b>Not bold</b> <script>alert(1)</script>'), `markup shown as typed: ${text}`);
+    assert.equal(/[\u0002\u0003\u001d]/.test(text), false, 'no formatting code left in the text');
+    assert.equal(await line.locator('b, script').count(), 0, 'no element from the network');
+
+    // A click opens the address in a new Browser window, and the host page stays where it is.
+    const hostUrl = page.url();
+    await links.first().click();
+    // The first launch of the Browser in a fresh profile asks the administrator to approve the
+    // Browser's own real-network capability (Kazo OS, not this app): approve it as "neo".
+    const approval = page.getByText('Administrator authorization required', { exact: false });
+    const address = page.locator('[data-window-id] .address-input');
+    await approval.or(address).first().waitFor({ timeout: 30_000 });
+    if (await approval.isVisible()) {
+        await page.locator('input[type="password"]').last().fill('matrix123');
+        await page.getByRole('button', { name: 'Allow', exact: true }).click();
+    }
+    await address.first().waitFor({ timeout: 30_000 });
+    await page.waitForFunction(
+        () => [...document.querySelectorAll('[data-window-id] .address-input')].some(input => input.value.includes('docs.hack/guide?topic=irc')),
+        null,
+        { timeout: 30_000 });
+    assert.equal(page.url(), hostUrl);
+    assert.equal(page.context().pages().length, 1, 'no host browser tab opened');
+    assert.deepEqual(errors, []);
+    await page.close();
+});
+
 test('closing the window disconnects; opened again it starts from the list of networks', { timeout: 300_000 }, async () => {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     const errors = [];

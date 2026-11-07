@@ -2,6 +2,7 @@ using System.Globalization;
 using Kazo.Irc.Logs;
 using Kazo.Irc.Protocol.Client;
 using Kazo.Irc.Protocol.Input;
+using Kazo.Irc.Protocol.Text;
 
 namespace Kazo.Irc.Chat;
 
@@ -284,7 +285,9 @@ public sealed class IrcChat : IAsyncDisposable
             var title = conversation.Kind == ConversationKind.Private
                 ? string.Format(CultureInfo.CurrentCulture, _texts.PrivateTitle, line.Nick)
                 : string.Format(CultureInfo.CurrentCulture, _texts.MentionTitle, line.Nick, conversation.Name);
-            _notifier.Notify(title, line.Kind == ChatLineKind.Action ? $"* {line.Nick} {line.Text}" : line.Text);
+            // A notification is plain text: the formatting codes are removed (work item 5).
+            var text = IrcFormatting.Strip(line.Text);
+            _notifier.Notify(title, line.Kind == ChatLineKind.Action ? $"* {line.Nick} {text}" : text);
         }
 
         Changed?.Invoke();

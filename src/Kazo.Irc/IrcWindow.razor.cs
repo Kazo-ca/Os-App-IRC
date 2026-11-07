@@ -5,6 +5,7 @@ using Kazo.Irc.Logs;
 using Kazo.Irc.Protocol.Client;
 using Kazo.Irc.Settings;
 using Kazo.Os.AppSdk;
+using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.Blazor;
 using Kazo.Os.AppSdk.Diagnostics;
 using Kazo.Os.AppSdk.Globalization;
@@ -19,7 +20,8 @@ namespace Kazo.Irc;
 /// narrow (decision 7). It follows the OS theme, with the console font as an option (decision 19).
 /// Work item 4 connects it to the chat (<see cref="IrcChat"/>): the networks, the conversations,
 /// the input line, what the user is told about mentions and private messages (decision 14) and the
-/// logs (decision 15). Closing the window sends <c>QUIT</c> (decision 8).
+/// logs (decision 15). Closing the window sends <c>QUIT</c> (decision 8). Work item 5 opens the
+/// web addresses of the messages in the OS Browser (decision 17).
 /// </summary>
 public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
 {
@@ -236,6 +238,28 @@ public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
         if (e.Key == "Escape")
         {
             _layout.Close();
+        }
+    }
+
+    /// <summary>
+    /// A web address of a message was clicked (decision 17): a new window of the Kazo OS Browser
+    /// opens it (<c>apps.launch</c>). The Browser decides how to reach the site (simulated network,
+    /// or the real web through the OS).
+    /// </summary>
+    /// <param name="link">The address, <c>http</c> or <c>https</c> (<see cref="Text.MessageLinks"/>).</param>
+    private async Task OpenLinkAsync(Uri link)
+    {
+        try
+        {
+            // Entered explicitly: the click may come from a component the OS did not wrap.
+            using IDisposable scope = KazoExecutionContext.Enter(AppContext);
+            await KazoBrowser.OpenAsync(link.AbsoluteUri);
+            _status = null;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException
+            or ArgumentException or OperationCanceledException or Microsoft.JSInterop.JSException)
+        {
+            _status = string.Format(CultureInfo.CurrentCulture, L["LinkFailed"], link.AbsoluteUri, exception.Message);
         }
     }
 

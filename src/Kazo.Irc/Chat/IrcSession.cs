@@ -1,5 +1,6 @@
 using System.Globalization;
 using Kazo.Irc.Protocol.Client;
+using Kazo.Irc.Protocol.Text;
 using Kazo.Irc.Protocol.Transport;
 
 namespace Kazo.Irc.Chat;
@@ -154,7 +155,7 @@ public sealed class IrcSession : IAsyncDisposable
             IrcChatMessageKind.Notice => ChatLineKind.Notice,
             _ => ChatLineKind.Message,
         };
-        var mention = !message.IsOwn && IrcMentions.Contains(message.Text, Client.CurrentNick);
+        var mention = !message.IsOwn && IrcMentions.Contains(IrcFormatting.Strip(message.Text), Client.CurrentNick);
         Add(conversation, new ChatLine(message.Time, kind, message.Sender.Name, message.Text, message.IsOwn, mention));
     }
 

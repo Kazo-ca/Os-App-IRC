@@ -46,6 +46,15 @@ public sealed class DemoIrcServer : IIrcTransport
     /// <summary>The longest wait of <c>!mention</c> and <c>!private</c>.</summary>
     public static readonly TimeSpan MaxDelay = TimeSpan.FromSeconds(60);
 
+    /// <summary>
+    /// What the bot answers to <c>!links</c> (work item 5): a web address of the simulated network
+    /// between brackets and before a full stop, IRC formatting codes (bold, a mIRC color, italics)
+    /// and text that looks like HTML, which must stay text.
+    /// </summary>
+    public const string LinksMessage =
+        "\u0002Links\u0002: the docs (http://docs.hack/guide?topic=irc), in \u000304,01red\u0003 and \u001Ditalics\u001D. "
+        + "<b>Not bold</b> <script>alert(1)</script> https://kazo.ca/.";
+
     private static readonly string[] OtherUsers = ["morpheus", "trinity"];
 
     /// <summary>The message of the day: what to try.</summary>
@@ -56,6 +65,7 @@ public sealed class DemoIrcServer : IIrcTransport
         $"{BotNick}: hello  -> the bot answers and names you.",
         "!mention 5  -> the bot names you in 5 seconds (switch to another window to see the notification).",
         "!private 5  -> the bot sends you a private message in 5 seconds.",
+        "!links  -> the bot sends web addresses and formatted text.",
         $"/msg {BotNick} hi  -> a private conversation with the bot.",
     ];
 
@@ -476,7 +486,11 @@ public sealed class DemoIrcServer : IIrcTransport
             return;
         }
 
-        if (TryReadCommand(text, "!mention", out var mentionDelay))
+        if (string.Equals(text.Trim(), "!links", StringComparison.OrdinalIgnoreCase))
+        {
+            Send($":{Source(BotNick)} PRIVMSG {channel.Name} :{LinksMessage}");
+        }
+        else if (TryReadCommand(text, "!mention", out var mentionDelay))
         {
             Later(mentionDelay, $":{Source(BotNick)} PRIVMSG {channel.Name} :{nick}: you asked me to name you, here you are.");
         }

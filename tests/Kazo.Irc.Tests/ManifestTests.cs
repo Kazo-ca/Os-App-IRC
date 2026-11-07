@@ -44,6 +44,7 @@ public sealed class ManifestTests
                 AppCapabilities.NotificationsPost,
                 AppCapabilities.FileSystemUserHomeRead,
                 AppCapabilities.FileSystemUserHomeWrite,
+                AppCapabilities.AppsLaunch,
             ],
             _app.Capabilities);
         Assert.DoesNotContain(_app.Capabilities, AppCapabilities.IsDangerous);
