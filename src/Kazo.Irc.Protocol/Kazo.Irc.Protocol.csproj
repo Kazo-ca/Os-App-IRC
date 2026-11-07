@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The IRC protocol of the app, as a pure library: messages, IRCv3 tags, CAP, SASL, the client
+    state machine, the model of channels and users, and the input commands. It has NO reference to
+    the Kazo OS SDK, so it is tested alone; the app gives it a transport (WebSocket or the relay's
+    TCP stream) through IIrcTransport. See doc/en/architecture.md, "Protocol".
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Kazo.Irc.Protocol</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kazo.Irc.Protocol.Tests" />
+  </ItemGroup>
+
+</Project>
