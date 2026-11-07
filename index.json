@@ -1,0 +1,10 @@
+{
+  "appId": "ca.kazo.irc",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "path": "1.0.0/ca.kazo.irc-1.0.0.kazoapp",
+      "sha256": "957dd0fa0e6ea949f79062f0ff0f435cbc81665f384b67a29d74ae3fe943b5c1"
+    }
+  ]
+}
