@@ -6,9 +6,10 @@ Native IRC chat client for [Kazo OS](https://github.com/Kazo-ca/Os), written in 
 real IRC networks on desktop and mobile. It connects over WebSocket without any server, and through
 the optional Kazo OS server's relay (TCP with TLS) to networks that do not accept WebSocket.
 
-**State:** in development (series `irc/base`). The app opens in Kazo OS with its layout (three
-columns on a computer, one column with side panels on a phone) and the console font option; the
-IRC protocol and the connection come with the next work items (see the plan's progress table).
+**State:** in development (series `irc/base`). The IRC protocol library is written (work item 2),
+and the app opens in Kazo OS with its layout (three columns on a computer, one column with side
+panels on a phone) and the console font option (work item 1); the connection comes with the next
+work items (see the plan's progress table).
 
 - Plan: [English](doc/en/plan.md) · [Français](doc/fr/plan.md)
 - Architecture of the code: [English](doc/en/architecture.md) · [Français](doc/fr/architecture.md)

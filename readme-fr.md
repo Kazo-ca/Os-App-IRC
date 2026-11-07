@@ -7,10 +7,10 @@ Blazor, pour les vrais réseaux IRC sur ordinateur et mobile. Il se connecte par
 aucun serveur, et par le relais du serveur optionnel de Kazo OS (TCP avec TLS) aux réseaux qui
 n'acceptent pas WebSocket.
 
-**État :** en développement (série `irc/base`). L'app s'ouvre dans Kazo OS avec sa mise en page
-(trois colonnes sur ordinateur, une colonne avec des panneaux sur téléphone) et l'option de police
-console ; le protocole IRC et la connexion arrivent avec les chantiers suivants (voir le tableau
-d'avancement du plan).
+**État :** en développement (série `irc/base`). La bibliothèque du protocole IRC est écrite
+(chantier 2), et l'app s'ouvre dans Kazo OS avec sa mise en page (trois colonnes sur ordinateur,
+une colonne avec des panneaux sur téléphone) et l'option de police console (chantier 1) ; la
+connexion arrive avec les chantiers suivants (voir le tableau d'avancement du plan).
 
 - Plan : [Français](doc/fr/plan.md) · [English](doc/en/plan.md)
 - Architecture du code : [Français](doc/fr/architecture.md) · [English](doc/en/architecture.md)
