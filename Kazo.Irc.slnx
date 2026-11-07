@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kazo.Irc.Os/Kazo.Irc.Os.csproj" />
+    <Project Path="src/Kazo.Irc/Kazo.Irc.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kazo.Irc.Tests/Kazo.Irc.Tests.csproj" />
+  </Folder>
+</Solution>

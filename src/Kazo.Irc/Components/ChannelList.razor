@@ -1,0 +1,11 @@
+@* The networks and their channels (left column, or the left panel on a phone). Work item 1 shows
+   the empty list; work item 3 fills it from networks.json. *@
+<div class="channel-list">
+    <p class="channel-list-empty">@EmptyText</p>
+</div>
+
+@code {
+    /// <summary>Gets or sets the text shown while no network is configured.</summary>
+    [Parameter, EditorRequired]
+    public string EmptyText { get; set; } = string.Empty;
+}

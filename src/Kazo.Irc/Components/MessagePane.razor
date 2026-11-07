@@ -1,0 +1,37 @@
+@* The conversation (middle column): the messages and the input line. Work item 1 shows the empty
+   conversation with the input line disabled; work items 2 and 3 bring the messages and sending. *@
+<section class="message-pane" aria-label="@EmptyTitle">
+    <div class="message-log" role="log" aria-live="polite">
+        <div class="message-empty">
+            <span class="message-empty-mark" aria-hidden="true">#</span>
+            <p class="message-empty-title">@EmptyTitle</p>
+            <p class="message-empty-hint">@EmptyHint</p>
+        </div>
+    </div>
+    <div class="message-input">
+        <input type="text" class="message-input-text" aria-label="@InputLabel" placeholder="@InputPlaceholder" disabled />
+        <button type="button" class="message-input-send" disabled>@SendLabel</button>
+    </div>
+</section>
+
+@code {
+    /// <summary>Gets or sets the title of the empty conversation.</summary>
+    [Parameter, EditorRequired]
+    public string EmptyTitle { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the line under the title of the empty conversation.</summary>
+    [Parameter, EditorRequired]
+    public string EmptyHint { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the accessible name of the input line.</summary>
+    [Parameter, EditorRequired]
+    public string InputLabel { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the placeholder of the input line.</summary>
+    [Parameter, EditorRequired]
+    public string InputPlaceholder { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the text of the send button.</summary>
+    [Parameter, EditorRequired]
+    public string SendLabel { get; set; } = string.Empty;
+}

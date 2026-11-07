@@ -1,0 +1,14 @@
+/* The user list: a scrolling column; its rows come with the channel model. */
+.user-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px;
+    font-family: var(--irc-text-font);
+}
+
+.user-list-empty {
+    margin: 12px 4px;
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 0.85rem;
+}
