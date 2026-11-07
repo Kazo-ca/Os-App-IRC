@@ -101,7 +101,7 @@ que Benoit fusionne. Côté Kazo OS, série `real-network/base` (ADR 0235).
 | Kazo OS 3 : ports déclarés, `BlockedPorts` | `real-network/3-declared-ports` (Kazo-ca/Os) | rien | Fait (Kazo OS 3.2.0) |
 | 1. Solution, manifeste, fenêtre, mise en page ordinateur et mobile | `irc/1-solution` | rien | Fait ([#5](https://github.com/Kazo-ca/Os-App-IRC/pull/5)) |
 | 2. Protocole IRC, IRCv3, faux transport | `irc/2-protocol` | rien | Fait ([#4](https://github.com/Kazo-ca/Os-App-IRC/pull/4)) |
-| 3. Connexion WebSocket et relais, réseaux, SASL | `irc/3-connect` | 1, 2, version de l'OS avec l'ADR 0235 | En revue |
+| 3. Connexion WebSocket et relais, réseaux, SASL | `irc/3-connect` | 1, 2, version de l'OS avec l'ADR 0235 | En revue ([#8](https://github.com/Kazo-ca/Os-App-IRC/pull/8)) |
 | 4. Discussion branchée à l'interface (faux transport), notifications et journaux | `irc/4-notifications-and-logs` | 1, 2 | Fait ([#6](https://github.com/Kazo-ca/Os-App-IRC/pull/6)) |
 | 5. Liens web | `irc/5-links` | 4 (affichage des messages) | Fait ([#7](https://github.com/Kazo-ca/Os-App-IRC/pull/7)) |
 | 6. Fiche du Store, `v1.0.0` | `irc/6-store` | 3, 4, 5 | À faire |
