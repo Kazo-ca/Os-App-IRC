@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppLabel" xml:space="preserve">
+    <value>Discussion IRC</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Salons</value>
+  </data>
+  <data name="ClosePanel" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="MessageLabel" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="MessagePlaceholder" xml:space="preserve">
+    <value>Pas connecté</value>
+  </data>
+  <data name="MonospaceFont" xml:space="preserve">
+    <value>Police console</value>
+  </data>
+  <data name="MonospaceFontHint" xml:space="preserve">
+    <value>Afficher les messages dans une police à chasse fixe</value>
+  </data>
+  <data name="Networks" xml:space="preserve">
+    <value>Réseaux</value>
+  </data>
+  <data name="NoConversation" xml:space="preserve">
+    <value>Pas connecté</value>
+  </data>
+  <data name="NoConversationHint" xml:space="preserve">
+    <value>Rejoignez un réseau pour commencer à discuter.</value>
+  </data>
+  <data name="NoNetwork" xml:space="preserve">
+    <value>Aucun réseau pour l’instant.</value>
+  </data>
+  <data name="NoUsers" xml:space="preserve">
+    <value>Personne ici pour l’instant.</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Envoyer</value>
+  </data>
+  <data name="SettingsSaveFailed" xml:space="preserve">
+    <value>Les réglages n’ont pas pu être enregistrés : {0}</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Utilisateurs</value>
+  </data>
+  <data name="CommandPlaceholder" xml:space="preserve">
+    <value>Tapez une commande, par exemple /join #kazo</value>
+  </data>
+  <data name="MessageTo" xml:space="preserve">
+    <value>Message à {0}</value>
+  </data>
+  <data name="ConnectTo" xml:space="preserve">
+    <value>Se connecter à {0}</value>
+  </data>
+  <data name="CloseConversation" xml:space="preserve">
+    <value>Fermer {0}</value>
+  </data>
+  <data name="UnreadCount" xml:space="preserve">
+    <value>{0} non lus</value>
+  </data>
+  <data name="HighlightCount" xml:space="preserve">
+    <value>{0} pour vous</value>
+  </data>
+  <data name="TalkPrivately" xml:space="preserve">
+    <value>Parler en privé avec {0}</value>
+  </data>
+  <data name="Logs" xml:space="preserve">
+    <value>Journaux</value>
+  </data>
+  <data name="LogsHint" xml:space="preserve">
+    <value>Écrire les conversations dans ~/.local/share/ca.kazo.irc/logs</value>
+  </data>
+  <data name="LogsFailed" xml:space="preserve">
+    <value>Les journaux n’ont pas pu être écrits : {0}</value>
+  </data>
+  <data name="LinkFailed" xml:space="preserve">
+    <value>Le Navigateur n’a pas pu ouvrir {0} : {1}</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Connexion à {0}...</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Connecté sous le pseudo {0}.</value>
+  </data>
+  <data name="Reconnecting" xml:space="preserve">
+    <value>Connexion perdue. Nouvel essai dans {0} s (essai {1}).</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Déconnecté.</value>
+  </data>
+  <data name="Whois" xml:space="preserve">
+    <value>{0} est {1} ({2}), sur {3}. Salons : {4}</value>
+  </data>
+  <data name="WhoisUnknown" xml:space="preserve">
+    <value>{0} : ce pseudo n’existe pas.</value>
+  </data>
+  <data name="MentionTitle" xml:space="preserve">
+    <value>{0} dans {1}</value>
+  </data>
+  <data name="PrivateTitle" xml:space="preserve">
+    <value>{0} (privé)</value>
+  </data>
+  <data name="InputUnknownCommand" xml:space="preserve">
+    <value>Commande inconnue : {0}</value>
+  </data>
+  <data name="InputMissingArgument" xml:space="preserve">
+    <value>Il manque un argument à cette commande.</value>
+  </data>
+  <data name="InputNoConversation" xml:space="preserve">
+    <value>Ouvrez un salon ou une conversation pour écrire un message, ou tapez une commande.</value>
+  </data>
+  <data name="InputNotAChannel" xml:space="preserve">
+    <value>Cette commande se tape dans un salon.</value>
+  </data>
+  <data name="InputNotConnected" xml:space="preserve">
+    <value>Le réseau n’est pas connecté.</value>
+  </data>
+  <data name="InputRefused" xml:space="preserve">
+    <value>La ligne n’a pas pu être envoyée.</value>
+  </data>
+  <data name="ActivityJoin" xml:space="preserve">
+    <value>{0} est arrivé</value>
+  </data>
+  <data name="ActivityPart" xml:space="preserve">
+    <value>{0} est parti</value>
+  </data>
+  <data name="ActivityPartReason" xml:space="preserve">
+    <value>{0} est parti ({1})</value>
+  </data>
+  <data name="ActivityKick" xml:space="preserve">
+    <value>{2} a été expulsé par {0}</value>
+  </data>
+  <data name="ActivityKickReason" xml:space="preserve">
+    <value>{2} a été expulsé par {0} ({1})</value>
+  </data>
+  <data name="ActivityQuit" xml:space="preserve">
+    <value>{0} a quitté le réseau</value>
+  </data>
+  <data name="ActivityQuitReason" xml:space="preserve">
+    <value>{0} a quitté le réseau ({1})</value>
+  </data>
+  <data name="ActivityNick" xml:space="preserve">
+    <value>{0} s’appelle maintenant {1}</value>
+  </data>
+  <data name="ActivityTopic" xml:space="preserve">
+    <value>{0} a changé le sujet : {1}</value>
+  </data>
+  <data name="ActivityMode" xml:space="preserve">
+    <value>{0} change les modes : {1}</value>
+  </data>
+  <data name="ActivityAway" xml:space="preserve">
+    <value>{0} est absent</value>
+  </data>
+  <data name="ActivityAwayReason" xml:space="preserve">
+    <value>{0} est absent ({1})</value>
+  </data>
+  <data name="ActivityBack" xml:space="preserve">
+    <value>{0} est de retour</value>
+  </data>
+  <data name="StateConnected" xml:space="preserve">
+    <value>Connecté</value>
+  </data>
+  <data name="StateConnecting" xml:space="preserve">
+    <value>Connexion en cours</value>
+  </data>
+  <data name="StateReconnecting" xml:space="preserve">
+    <value>Reconnexion</value>
+  </data>
+  <data name="StateDisconnected" xml:space="preserve">
+    <value>Déconnecté</value>
+  </data>
+  <data name="ServerRequired" xml:space="preserve">
+    <value>Serveur Kazo requis</value>
+  </data>
+  <data name="NoServerConnected" xml:space="preserve">
+    <value>Aucun serveur Kazo connecté</value>
+  </data>
+  <data name="ManageNetworks" xml:space="preserve">
+    <value>Gérer les réseaux</value>
+  </data>
+  <data name="NetworksTitle" xml:space="preserve">
+    <value>Réseaux</value>
+  </data>
+  <data name="NetworksHint" xml:space="preserve">
+    <value>Les réseaux proposés dans la liste. Un réseau WebSocket marche seul ; les autres passent par le serveur Kazo.</value>
+  </data>
+  <data name="NetworkAdd" xml:space="preserve">
+    <value>Ajouter un réseau</value>
+  </data>
+  <data name="NetworkEdit" xml:space="preserve">
+    <value>Modifier le réseau</value>
+  </data>
+  <data name="NetworkEditOne" xml:space="preserve">
+    <value>Modifier {0}</value>
+  </data>
+  <data name="NetworkDeleteOne" xml:space="preserve">
+    <value>Supprimer {0}</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="RouteWebSocket" xml:space="preserve">
+    <value>WebSocket · {0}</value>
+  </data>
+  <data name="RouteRelay" xml:space="preserve">
+    <value>Serveur Kazo · {0}:{1}</value>
+  </data>
+  <data name="RouteRelayTls" xml:space="preserve">
+    <value>Serveur Kazo · {0}:{1} (TLS)</value>
+  </data>
+  <data name="NetworkName" xml:space="preserve">
+    <value>Nom</value>
+  </data>
+  <data name="NetworkTransport" xml:space="preserve">
+    <value>Connexion</value>
+  </data>
+  <data name="TransportWebSocket" xml:space="preserve">
+    <value>WebSocket</value>
+  </data>
+  <data name="TransportWebSocketHint" xml:space="preserve">
+    <value>Depuis le navigateur, sans serveur Kazo. Seulement pour les réseaux qui l'acceptent.</value>
+  </data>
+  <data name="TransportRelay" xml:space="preserve">
+    <value>Par le serveur Kazo</value>
+  </data>
+  <data name="TransportRelayHint" xml:space="preserve">
+    <value>Tous les réseaux, avec TLS ouvert par le serveur. Demande un serveur Kazo connecté.</value>
+  </data>
+  <data name="NetworkWebSocketUrl" xml:space="preserve">
+    <value>Adresse WebSocket</value>
+  </data>
+  <data name="NetworkHost" xml:space="preserve">
+    <value>Serveur</value>
+  </data>
+  <data name="NetworkPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="NetworkTls" xml:space="preserve">
+    <value>Connexion chiffrée (TLS)</value>
+  </data>
+  <data name="NetworkPortsHint" xml:space="preserve">
+    <value>Le serveur Kazo relaie les ports déclarés par IRC : 6697 (TLS) et 6667.</value>
+  </data>
+  <data name="NetworkNick" xml:space="preserve">
+    <value>Pseudo</value>
+  </data>
+  <data name="NetworkSaslAccount" xml:space="preserve">
+    <value>Compte SASL</value>
+  </data>
+  <data name="NetworkSaslPassword" xml:space="preserve">
+    <value>Mot de passe SASL</value>
+  </data>
+  <data name="NetworkPasswordKept" xml:space="preserve">
+    <value>Gardé dans le trousseau</value>
+  </data>
+  <data name="NetworkSaslHint" xml:space="preserve">
+    <value>Le mot de passe est gardé dans le trousseau chiffré de l'OS, jamais dans un fichier. Laissez-le vide pour garder celui enregistré.</value>
+  </data>
+  <data name="NetworkAutoJoin" xml:space="preserve">
+    <value>Salons rejoints à la connexion</value>
+  </data>
+  <data name="ProblemNameMissing" xml:space="preserve">
+    <value>Donnez un nom au réseau.</value>
+  </data>
+  <data name="ProblemNameTaken" xml:space="preserve">
+    <value>Un autre réseau porte ce nom.</value>
+  </data>
+  <data name="ProblemWebSocketUrlInvalid" xml:space="preserve">
+    <value>L'adresse WebSocket commence par wss:// (ou ws://).</value>
+  </data>
+  <data name="ProblemHostMissing" xml:space="preserve">
+    <value>Donnez le nom du serveur, par exemple irc.libera.chat.</value>
+  </data>
+  <data name="ProblemPortInvalid" xml:space="preserve">
+    <value>Le port est un nombre de 1 à 65535.</value>
+  </data>
+  <data name="ProblemPortNotDeclared" xml:space="preserve">
+    <value>Le serveur Kazo ne relaie pour IRC que les ports 6697 et 6667.</value>
+  </data>
+  <data name="ProblemNickInvalid" xml:space="preserve">
+    <value>Un pseudo n'a que des lettres, des chiffres et - _ [ ] { } \ | ^ `, et ne commence ni par un chiffre ni par un tiret.</value>
+  </data>
+  <data name="ProblemChannelInvalid" xml:space="preserve">
+    <value>Un salon commence par # (ou &amp; + !) et n'a ni espace ni virgule.</value>
+  </data>
+  <data name="NetworksSaveFailed" xml:space="preserve">
+    <value>Les réseaux n'ont pas pu être enregistrés : {0}</value>
+  </data>
+  <data name="KeyringLocked" xml:space="preserve">
+    <value>Le trousseau est verrouillé : {0} se connecte sans son mot de passe SASL ({1}).</value>
+  </data>
+  <data name="ErrorNoPermission" xml:space="preserve">
+    <value>IRC n'a pas le droit de joindre le vrai réseau : un administrateur doit autoriser sa capacité « Accéder au vrai réseau » (Paramètres, autorisations des applications).</value>
+  </data>
+  <data name="ErrorNoServer" xml:space="preserve">
+    <value>{0} demande le serveur Kazo, et aucun serveur Kazo ne relaie IRC (aucun connecté, relais coupé, ou l'accord ne lui est pas encore parvenu).</value>
+  </data>
+  <data name="ErrorRefused" xml:space="preserve">
+    <value>{0} a refusé la connexion : le serveur IRC, ou le serveur Kazo, qui bloque peut-être ce port.</value>
+  </data>
+  <data name="ErrorCertificateRefused" xml:space="preserve">
+    <value>Le certificat TLS de {0} a été refusé : {1}</value>
+  </data>
+  <data name="ErrorSimulatedHost" xml:space="preserve">
+    <value>Cette adresse est sur le réseau simulé, qui n'a pas encore de serveur IRC.</value>
+  </data>
+  <data name="ErrorUnreachable" xml:space="preserve">
+    <value>{0} est injoignable : {1}</value>
+  </data>
+  <data name="ErrorLost" xml:space="preserve">
+    <value>La connexion à {0} a été perdue : {1}</value>
+  </data>
+  <data name="ErrorNotSupported" xml:space="preserve">
+    <value>Cette connexion ne peut pas être ouverte ici : {1}</value>
+  </data>
+</root>

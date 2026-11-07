@@ -1,0 +1,158 @@
+/* The conversation: the messages fill the column, the input line stays at the bottom. */
+.message-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.message-log {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    /* The newest line stays in view as lines arrive, unless the user scrolled up to read. */
+    flex-direction: column-reverse;
+    overflow-y: auto;
+    padding: 12px 16px;
+    font-family: var(--irc-text-font);
+    line-height: 1.45;
+}
+
+.message-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+    text-align: center;
+}
+
+.message-empty-mark {
+    font-family: var(--kos-font-mono, 'Consolas', monospace);
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--kos-accent, #42d392);
+    text-shadow: 0 0 18px var(--kos-accent-glow, transparent);
+    opacity: 0.8;
+}
+
+.message-empty-title {
+    margin: 0;
+    font-weight: 600;
+    color: var(--kos-text-primary, #e6edf3);
+}
+
+.message-empty-hint {
+    margin: 0;
+    max-width: 32ch;
+    font-size: 0.85rem;
+    color: var(--kos-text-muted, #8b949e);
+}
+
+.message-input {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--kos-border, #30363d);
+    background: var(--kos-bg-surface, #161b22);
+}
+
+.message-input-text {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--kos-btn-min-height, 32px);
+    padding: 4px 10px;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-md, 6px);
+    background: var(--kos-bg-base, #0d1117);
+    color: var(--kos-text-primary, #e6edf3);
+    font-family: var(--irc-text-font);
+    font-size: 0.95rem;
+}
+
+.message-input-text:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: 0;
+}
+
+.message-input-send {
+    min-height: var(--kos-btn-min-height, 32px);
+    padding: var(--kos-btn-padding, 4px 14px);
+    border: 1px solid var(--kos-btn-border, var(--kos-border, #30363d));
+    border-radius: var(--kos-btn-radius, 6px);
+    background: var(--kos-accent, #42d392);
+    color: var(--kos-bg-base, #0d1117);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.message-input-text:disabled,
+.message-input-send:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* The lines: time, nickname, text; own lines, mentions, activities and server lines differ. */
+.message-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.message-line {
+    padding: 1px 6px;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+}
+
+/* Spaces typed in a message are kept (ASCII art, aligned columns); the markup's own are not. */
+.message-text {
+    white-space: pre-wrap;
+}
+
+.message-time {
+    margin-right: 8px;
+    font-family: var(--kos-font-mono, 'Consolas', monospace);
+    font-size: 0.8em;
+    color: var(--kos-text-muted, #8b949e);
+}
+
+.message-nick {
+    margin-right: 6px;
+    font-weight: 700;
+    color: var(--kos-text-accent, var(--kos-accent, #42d392));
+}
+
+.message-line.own .message-nick {
+    color: var(--kos-text-secondary, #c9d1d9);
+}
+
+.message-line.kind-action .message-text,
+.message-line.kind-action .message-nick {
+    font-style: italic;
+}
+
+.message-line.kind-notice .message-nick {
+    color: var(--kos-info, #58a6ff);
+}
+
+.message-line.kind-activity,
+.message-line.kind-server {
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 0.9em;
+}
+
+.message-line.kind-error {
+    color: var(--kos-error, #f85149);
+    font-size: 0.9em;
+}
+
+/* Decision 14: a line that names the user. */
+.message-line.mention {
+    background: color-mix(in srgb, var(--kos-warning, #e3b341) 16%, transparent);
+    box-shadow: inset 3px 0 0 var(--kos-warning, #e3b341);
+}

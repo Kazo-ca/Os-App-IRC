@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kazo.Irc\Kazo.Irc.csproj" />
+    <!-- The demonstration server, tested here whatever IrcDemoNetwork says for the app. -->
+    <ProjectReference Include="..\..\src\Kazo.Irc.Demo\Kazo.Irc.Demo.csproj" />
+  </ItemGroup>
+
+  <!--
+    Kazo.Irc.Demo brings Kazo.Irc.Protocol.dll, and the Store build (IrcSingleAssembly) compiles the
+    same types into Kazo.Irc.dll: the tests are built with the demonstration network.
+  -->
+  <Target Name="IrcTestsNeedTheDemoNetwork" BeforeTargets="ResolveProjectReferences" Condition="'$(IrcSingleAssembly)' == 'true'">
+    <Error Text="Build the tests with the demonstration network: dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true (the Store build, without it, compiles the protocol into Kazo.Irc.dll, Kazo-ca/Os#419)." />
+  </Target>
+</Project>

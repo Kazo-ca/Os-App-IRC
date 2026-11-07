@@ -1,0 +1,1 @@
+Chat on real IRC networks: WebSocket without any server, Libera.Chat and OFTC through the Kazo server.

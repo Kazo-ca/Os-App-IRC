@@ -1,0 +1,56 @@
+@using Kazo.Irc.Chat
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@* The conversation (middle column): its lines and the input line. The input keeps a history (up and
+   down arrows) and completes nicknames (Tab). Without a conversation it shows the empty state. *@
+<section class="message-pane" aria-label="@(Conversation?.Name ?? EmptyTitle)">
+    <div class="message-log" role="log" aria-live="polite">
+        @if (Conversation is null)
+        {
+            <div class="message-empty">
+                <span class="message-empty-mark" aria-hidden="true">#</span>
+                <p class="message-empty-title">@EmptyTitle</p>
+                <p class="message-empty-hint">@EmptyHint</p>
+            </div>
+        }
+        else
+        {
+            @* column-reverse on .message-log keeps the newest line in view without script. *@
+            <div class="message-lines">
+                @foreach (var line in VisibleLines)
+                {
+                    <div @key="line" class="message-line kind-@line.Kind.ToString().ToLowerInvariant() @(line.IsOwn ? "own" : null) @(line.IsMention ? "mention" : null)">
+                        <time class="message-time" datetime="@line.Time.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@FormatTime(line.Time)</time>
+                        @switch (line.Kind)
+                        {
+                            case ChatLineKind.Message:
+                                <span class="message-nick">&lt;@line.Nick&gt;</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
+                                break;
+                            case ChatLineKind.Action:
+                                <span class="message-nick">* @line.Nick</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
+                                break;
+                            case ChatLineKind.Notice:
+                                <span class="message-nick">-@line.Nick-</span>
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
+                                break;
+                            case ChatLineKind.Activity:
+                                <span class="message-text"><MessageText Text="@ActivityText(line)" OnOpenLink="OnOpenLink" /></span>
+                                break;
+                            default:
+                                <span class="message-text"><MessageText Text="@line.Text" OnOpenLink="OnOpenLink" /></span>
+                                break;
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    <form class="message-input" @onsubmit="SubmitAsync">
+        <input @ref="_input" type="text" class="message-input-text" aria-label="@InputLabel" placeholder="@InputPlaceholder"
+               disabled="@(!InputEnabled)" value="@_text" @oninput="OnInput" @onkeydown="OnKeyDownAsync"
+               autocomplete="off" spellcheck="false" maxlength="4000" />
+        <button type="submit" class="message-input-send" disabled="@(!InputEnabled)">@SendLabel</button>
+    </form>
+</section>

@@ -1,0 +1,142 @@
+@using Kazo.Irc.Chat
+@using Kazo.Irc.Protocol.Client
+@* The networks and their conversations (left column, or the left panel on a phone): the server tab,
+   the channels and the private conversations of each network, with what the user has not seen
+   (decision 14): unread conversations in bold, mentions and private messages with an accent badge.
+   Under them, the networks that can be opened. *@
+<div class="channel-list">
+    @if (Sessions.Count == 0)
+    {
+        <p class="channel-list-empty">@EmptyText</p>
+    }
+
+    @foreach (var session in Sessions)
+    {
+        <ul class="channel-network" aria-label="@session.Network.Name">
+            @foreach (var conversation in session.Conversations)
+            {
+                var selected = conversation == Selected;
+                <li @key="conversation" class="channel-row @KindClass(conversation) @(selected ? "selected" : null) @(conversation.UnreadCount > 0 ? "unread" : null) @(conversation.HighlightCount > 0 ? "highlight" : null) @(conversation.IsJoined ? null : "parted")">
+                    <button type="button" class="channel-select" aria-current="@(selected ? "true" : null)"
+                            @onclick="() => OnSelect.InvokeAsync(conversation)">
+                        @if (conversation.Kind == ConversationKind.Server)
+                        {
+                            <span class="channel-state state-@session.Client.State.ToString().ToLowerInvariant()" title="@StateText(session.Client.State)" aria-hidden="true"></span>
+                        }
+                        <span class="channel-name">@conversation.Name</span>
+                        @if (conversation.HighlightCount > 0)
+                        {
+                            <span class="channel-badge" title="@string.Format(System.Globalization.CultureInfo.CurrentCulture, HighlightText, conversation.HighlightCount)">@conversation.HighlightCount</span>
+                        }
+                        else if (conversation.UnreadCount > 0)
+                        {
+                            <span class="channel-badge quiet" title="@string.Format(System.Globalization.CultureInfo.CurrentCulture, UnreadText, conversation.UnreadCount)">@conversation.UnreadCount</span>
+                        }
+                    </button>
+                    @if (conversation.Kind != ConversationKind.Server)
+                    {
+                        <button type="button" class="channel-close" aria-label="@string.Format(System.Globalization.CultureInfo.CurrentCulture, CloseText, conversation.Name)"
+                                @onclick="() => OnClose.InvokeAsync(conversation)">×</button>
+                    }
+                </li>
+            }
+        </ul>
+    }
+
+    @foreach (var network in AvailableNetworks)
+    {
+        <button type="button" class="channel-connect @(network.NeedsKazoServer ? "needs-server" : null)" @onclick="() => OnConnect.InvokeAsync(network)">
+            <span class="channel-connect-name"><span aria-hidden="true">+</span> @string.Format(System.Globalization.CultureInfo.CurrentCulture, ConnectText, network.Name)</span>
+            @if (network.NeedsKazoServer)
+            {
+                @* Decision 13: a network without WebSocket needs the Kazo server's relay. *@
+                <span class="channel-connect-note @(RelayUnavailable ? "unavailable" : null)">@(RelayUnavailable ? NoServerText : ServerRequiredText)</span>
+            }
+        </button>
+    }
+
+    @if (OnManage.HasDelegate)
+    {
+        <button type="button" class="channel-manage" @onclick="OnManage">
+            <svg class="channel-manage-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h7M12 4h2M2 12h2M7 12h7M9 2.5v3M4 10.5v3" /></svg>
+            @ManageText
+        </button>
+    }
+</div>
+
+@code {
+    /// <summary>Gets or sets the networks open.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<IrcSession> Sessions { get; set; } = [];
+
+    /// <summary>Gets or sets the networks that can be opened (not open yet).</summary>
+    [Parameter]
+    public IReadOnlyList<IrcNetwork> AvailableNetworks { get; set; } = [];
+
+    /// <summary>Gets or sets the open conversation.</summary>
+    [Parameter]
+    public Conversation? Selected { get; set; }
+
+    /// <summary>Gets or sets what a click on a conversation does.</summary>
+    [Parameter]
+    public EventCallback<Conversation> OnSelect { get; set; }
+
+    /// <summary>Gets or sets what the × of a conversation does.</summary>
+    [Parameter]
+    public EventCallback<Conversation> OnClose { get; set; }
+
+    /// <summary>Gets or sets what a click on an available network does.</summary>
+    [Parameter]
+    public EventCallback<IrcNetwork> OnConnect { get; set; }
+
+    /// <summary>Gets or sets the text shown while no network is open.</summary>
+    [Parameter, EditorRequired]
+    public string EmptyText { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the format of the connect buttons ({0}: the network).</summary>
+    [Parameter]
+    public string ConnectText { get; set; } = "Connect to {0}";
+
+    /// <summary>Gets or sets the format of the close buttons' names ({0}: the conversation).</summary>
+    [Parameter]
+    public string CloseText { get; set; } = "Close {0}";
+
+    /// <summary>Gets or sets the format of the unread badge's hint ({0}: the count).</summary>
+    [Parameter]
+    public string UnreadText { get; set; } = "{0} unread";
+
+    /// <summary>Gets or sets the format of the mention badge's hint ({0}: the count).</summary>
+    [Parameter]
+    public string HighlightText { get; set; } = "{0} for you";
+
+    /// <summary>Gets or sets the note of a network that needs the Kazo server (« Kazo server required »).</summary>
+    [Parameter]
+    public string ServerRequiredText { get; set; } = "Kazo server required";
+
+    /// <summary>Gets or sets the note of such a network once a relay connection found no server.</summary>
+    [Parameter]
+    public string NoServerText { get; set; } = "No Kazo server connected";
+
+    /// <summary>Gets or sets whether a relay connection found no Kazo server during this session.</summary>
+    [Parameter]
+    public bool RelayUnavailable { get; set; }
+
+    /// <summary>Gets or sets what the « Manage networks » button does (no button when unset).</summary>
+    [Parameter]
+    public EventCallback OnManage { get; set; }
+
+    /// <summary>Gets or sets the text of the « Manage networks » button.</summary>
+    [Parameter]
+    public string ManageText { get; set; } = "Manage networks";
+
+    /// <summary>Gets or sets the name of a connection state.</summary>
+    [Parameter]
+    public Func<IrcClientState, string> StateText { get; set; } = state => state.ToString();
+
+    private static string KindClass(Conversation conversation) => conversation.Kind switch
+    {
+        ConversationKind.Server => "kind-server",
+        ConversationKind.Private => "kind-private",
+        _ => "kind-channel",
+    };
+}

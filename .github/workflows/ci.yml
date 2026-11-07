@@ -1,0 +1,80 @@
+name: CI
+
+# Builds the Release profile (Kazo OS packages from nuget.org, at the version of the
+# external/KazoOs submodule) and runs every test suite: C# unit tests and the end-to-end runs of
+# the app inside the Kazo OS host (Playwright, Chromium).
+# Pushes to the integration branches, and every PR (work items are pushed and tested through
+# their PR, so a work-item push does not run twice).
+on:
+  push:
+    branches: [main, "irc/base"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout (with the Kazo OS submodule)
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+
+      # ADR 0176 §6 of Kazo OS: never a modified submodule, always exactly on its release tag.
+      - name: Check the Kazo OS submodule
+        run: bash .github/scripts/check-kazoos-submodule.sh
+
+      # The Release profile: Kazo OS packages from nuget.org, at the submodule's version. This is
+      # what the Kazo OS Store compiles. IrcDemoNetwork adds the demonstration network (an IRC
+      # server in memory) that the end-to-end tests talk to; the Store and the packages are built
+      # without it.
+      - name: Build (Release, packages, with the demonstration network)
+        run: dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true
+
+      - name: C# unit tests
+        run: dotnet test Kazo.Irc.slnx -c Release --no-build
+
+      - name: Install JavaScript test tools
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      # The Store build (Release without the demonstration network, IrcSingleAssembly): Kazo OS 3.2.0
+      # packs and loads one assembly per app (Kazo-ca/Os#419), so the package must hold exactly
+      # lib/Kazo.Irc.dll. Last step: it rebuilds src/Kazo.Irc without the demonstration network.
+      - name: Pack as the Kazo OS Store builds it
+        run: |
+          dotnet build src/Kazo.Irc -c Release -t:KazoOsPack -p:KazoOsPackageOutput="$RUNNER_TEMP/packages"
+          package=$(ls "$RUNNER_TEMP"/packages/*/*.kazoapp)
+          unzip -Z1 "$package"
+          libraries=$(unzip -Z1 "$package" | grep -E '^lib/[^/]+\.dll$' || true)
+          if [[ "$libraries" != "lib/Kazo.Irc.dll" ]]; then
+            echo "::error::The package must hold only lib/Kazo.Irc.dll (Kazo-ca/Os#419), it holds: $libraries"
+            exit 1
+          fi
+          if unzip -Z1 "$package" | grep -q 'Kazo.Irc.Demo'; then
+            echo "::error::The Store package holds the demonstration network."
+            exit 1
+          fi

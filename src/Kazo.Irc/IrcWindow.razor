@@ -1,0 +1,126 @@
+@inherits WindowAppBase
+
+@* The IRC window: the networks and their conversations, the open conversation with its input line,
+   and the users of the channel. Wide: three columns. Compact (a phone, a narrow window): the
+   messages, with the channels and the users as side panels opened from the toolbar. Which layout
+   applies is decided by the CSS, from the window's own width (container query). *@
+<div class="irc-window @(_settings.MonospaceFont ? "monospace" : null)" aria-label="@L["AppLabel"]" @onkeydown="OnKeyDown">
+    <div class="irc-frame">
+        <header class="irc-toolbar">
+            <button type="button" class="irc-tool irc-panel-toggle" aria-controls="irc-channels-panel"
+                    aria-expanded="@(_layout.IsOpen(IrcPanel.Channels) ? "true" : "false")"
+                    @onclick="() => _layout.Toggle(IrcPanel.Channels)">
+                <svg class="irc-tool-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" /></svg>
+                <span>@L["Channels"]</span>
+                @if (_chat.AttentionCount > 0)
+                {
+                    <em class="irc-tool-badge" aria-hidden="true">@_chat.AttentionCount</em>
+                }
+            </button>
+            <span class="irc-brand" aria-hidden="true">#</span>
+            <div class="irc-heading">
+                <h1 class="irc-title">@(_chat.Selected?.Name ?? L["NoConversation"])</h1>
+                @if (_chat.Selected?.Channel?.Topic is { Length: > 0 } topic)
+                {
+                    <p class="irc-topic" title="@IrcFormatting.Strip(topic)"><MessageText Text="@topic" OnOpenLink="OpenLinkAsync" /></p>
+                }
+            </div>
+            <span class="irc-spacer"></span>
+            <button type="button" class="irc-tool irc-logs-toggle"
+                    aria-pressed="@(_settings.LogsEnabled ? "true" : "false")"
+                    title="@L["LogsHint"]"
+                    @onclick="ToggleLogsAsync">
+                <svg class="irc-tool-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4zM9.5 1.5V5H13M6 8h5M6 10.5h5M6 13h3" /></svg>
+                <span>@L["Logs"]</span>
+            </button>
+            <button type="button" class="irc-tool irc-font-toggle"
+                    aria-pressed="@(_settings.MonospaceFont ? "true" : "false")"
+                    title="@L["MonospaceFontHint"]"
+                    @onclick="ToggleMonospaceAsync">
+                <svg class="irc-tool-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m3 5 3 3-3 3M8 11h5" /></svg>
+                <span>@L["MonospaceFont"]</span>
+            </button>
+            <button type="button" class="irc-tool irc-panel-toggle" aria-controls="irc-users-panel"
+                    aria-expanded="@(_layout.IsOpen(IrcPanel.Users) ? "true" : "false")"
+                    @onclick="() => _layout.Toggle(IrcPanel.Users)">
+                <svg class="irc-tool-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5" /><path d="M1.5 13.5c.6-2.6 2.3-4 4.5-4s3.9 1.4 4.5 4M11 3.2a2.5 2.5 0 0 1 0 4.6M12.5 9.8c1 .7 1.7 2 2 3.7" /></svg>
+                <span>@L["Users"]</span>
+            </button>
+        </header>
+
+        <div class="irc-body">
+            <nav id="irc-channels-panel" class="irc-column irc-channels @(_layout.IsOpen(IrcPanel.Channels) ? "open" : null)" aria-label="@L["Networks"]">
+                <header class="irc-column-header">
+                    <h2>@L["Networks"]</h2>
+                    <button type="button" class="irc-panel-close" aria-label="@L["ClosePanel"]" @onclick="_layout.Close">×</button>
+                </header>
+                <ChannelList Sessions="_chat.Sessions"
+                             AvailableNetworks="AvailableNetworks"
+                             Selected="_chat.Selected"
+                             OnSelect="Select"
+                             OnClose="CloseConversationAsync"
+                             OnConnect="Connect"
+                             EmptyText="@L["NoNetwork"]"
+                             ConnectText="@L["ConnectTo"]"
+                             CloseText="@L["CloseConversation"]"
+                             UnreadText="@L["UnreadCount"]"
+                             HighlightText="@L["HighlightCount"]"
+                             ServerRequiredText="@L["ServerRequired"]"
+                             NoServerText="@L["NoServerConnected"]"
+                             RelayUnavailable="_chat.RelayUnavailable"
+                             OnManage="OpenEditor"
+                             ManageText="@L["ManageNetworks"]"
+                             StateText="StateText" />
+            </nav>
+
+            <main class="irc-conversation">
+                <MessagePane Conversation="_chat.Selected"
+                             EmptyTitle="@L["NoConversation"]"
+                             EmptyHint="@L["NoConversationHint"]"
+                             InputLabel="@L["MessageLabel"]"
+                             InputPlaceholder="@InputPlaceholder"
+                             SendLabel="@L["Send"]"
+                             InputEnabled="_chat.Selected is not null"
+                             OnSubmit="SubmitAsync"
+                             ActivityText="ActivityText"
+                             OnOpenLink="OpenLinkAsync"
+                             TimeZone="AppContext.TimeZone" />
+            </main>
+
+            <aside id="irc-users-panel" class="irc-column irc-users @(_layout.IsOpen(IrcPanel.Users) ? "open" : null)" aria-label="@L["Users"]">
+                <header class="irc-column-header">
+                    <h2>@L["Users"]</h2>
+                    <button type="button" class="irc-panel-close" aria-label="@L["ClosePanel"]" @onclick="_layout.Close">×</button>
+                </header>
+                <UserList Users="@(_chat.Selected?.Users ?? [])"
+                          OnOpenQuery="OpenQueryAsync"
+                          QueryText="@L["TalkPrivately"]"
+                          EmptyText="@L["NoUsers"]" />
+            </aside>
+
+            @if (_layout.OpenPanel != IrcPanel.None)
+            {
+                <button type="button" class="irc-scrim" aria-label="@L["ClosePanel"]" @onclick="_layout.Close"></button>
+            }
+        </div>
+
+        @if (_editorOpen)
+        {
+            <NetworkEditor Networks="_chat.Catalog.EditableNetworks"
+                           Text="key => L[key]"
+                           DefaultNick="@DefaultNick"
+                           HasSavedPassword="HasSavedPasswordAsync"
+                           OnSave="SaveNetworkAsync"
+                           OnDelete="DeleteNetworkAsync"
+                           OnClose="CloseEditor" />
+        }
+
+        @if (_status is not null)
+        {
+            <div class="irc-status" role="alert">
+                <span class="irc-status-text">@_status</span>
+                <button type="button" class="irc-status-dismiss" aria-label="@L["Dismiss"]" @onclick="DismissStatus">×</button>
+            </div>
+        }
+    </div>
+</div>

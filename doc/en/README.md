@@ -4,4 +4,5 @@
 
 | Document | Content |
 | --- | --- |
-| [`plan.md`](plan.md) | Proposed plan: goal, decisions, the app, order of the work, tests, licenses. |
+| [`plan.md`](plan.md) | Validated plan: goal, decisions, the app, order of the work, tests, licenses, progress. |
+| [`architecture.md`](architecture.md) | The code: solution and host, manifest, window and layout (desktop and mobile), theme and console font, settings, IRC protocol (library, client, model, input), chat wired to the window (sessions, notifications, title counter, logs, demonstration network), real networks (WebSocket, the Kazo server's relay, errors, `networks.json` and its editor, SASL password in the keyring), Kazo OS Store listing and installed app, tests. |

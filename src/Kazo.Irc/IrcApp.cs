@@ -1,0 +1,119 @@
+using Kazo.Os.App.Abstractions;
+
+namespace Kazo.Irc;
+
+/// <summary>
+/// The app's manifest (decisions 7, 8 and 20 of doc/en/plan.md). The build generates
+/// <c>manifest.json</c> from this class (Kazo.Os.App.Build); it is never instantiated at run time.
+/// </summary>
+/// <remarks>
+/// Work item 1 declares the base: one window per user, on the desktop and on phones, and the app's
+/// own folder for its settings (<c>~/.config/ca.kazo.irc/settings.json</c>). Each later work item
+/// adds the capabilities its code uses, as the plan lists them: <c>network.real.access</c>,
+/// <c>network.simulated.write</c> and the real ports with the connection (work item 3, done, after
+/// Kazo OS ADR 0235 §3), the notifications and
+/// the logs (work item 4, done: <c>notifications.post</c>, <c>filesystem.user-home.read</c> and
+/// <c>.write</c>), opening a web address in the Browser (work item 5, done: <c>apps.launch</c>).
+/// </remarks>
+[AppManifest]
+public sealed class IrcApp : AppDefinition
+{
+    /// <summary>Width under which the window shows one column and its side panels (phones, a narrow window).</summary>
+    public const int CompactWidth = 720;
+
+    /// <inheritdoc />
+    public override string Id => "ca.kazo.irc";
+
+    /// <inheritdoc />
+    public override string Name => "IRC";
+
+    /// <inheritdoc />
+    public override AppKind Kind => AppKind.Window;
+
+    /// <inheritdoc />
+    public override Type EntryPoint => typeof(IrcWindow);
+
+    /// <inheritdoc />
+    /// <remarks>Decision 7: the same window on phones, in one column with side panels.</remarks>
+    public override Type? MobileEntryPoint => typeof(IrcWindow);
+
+    /// <inheritdoc />
+    public override string PublisherId => "pub.kazo";
+
+    /// <inheritdoc />
+    public override string Description => "Chat on real IRC networks";
+
+    /// <inheritdoc />
+    public override string Category => "communication";
+
+    /// <inheritdoc />
+    /// <remarks>The tag that publishes to the Kazo OS Store must be v + this version.</remarks>
+    public override string Version => "1.0.0";
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Decision 8: one window per user holds every network and channel; launching the app again
+    /// brings that window back.
+    /// </remarks>
+    public override bool SingleInstancePerUser => true;
+
+    /// <inheritdoc />
+    public override IReadOnlyList<string> Capabilities =>
+    [
+        // ~/.config/ca.kazo.irc/: settings.json (the console font of work item 1) and, from work
+        // item 3, networks.json.
+        AppCapabilities.FileSystemPrivateRead,
+        AppCapabilities.FileSystemPrivateWrite,
+
+        // Work item 4, decision 14: a mention or a private message while the window does not have
+        // the focus posts an OS notification (which plays the notification sound).
+        AppCapabilities.NotificationsPost,
+
+        // Work item 4, decision 15: the logs in ~/.local/share/ca.kazo.irc/logs/, in the user's
+        // home, where the user can read them with the other apps.
+        AppCapabilities.FileSystemUserHomeRead,
+        AppCapabilities.FileSystemUserHomeWrite,
+
+        // Work item 5, decision 17: a web address of a message opens in a new window of the OS
+        // Browser (KazoBrowser.OpenAsync).
+        AppCapabilities.AppsLaunch,
+
+        // Work item 3, decisions 3, 4 and 11: the real network, by a WebSocket from the browser
+        // (KazoClientWebSocket) or through the Kazo server's relay (KazoTcpClient). Dangerous: an
+        // administrator approves it, with the ports below (ADR 0235 §3, ADR 0233 of Kazo OS).
+        AppCapabilities.NetworkRealAccess,
+
+        // KazoTcpClient.ConnectAsync opens a socket of the OS's network stack, which asks for
+        // network.simulated.write (normal) before the relay is tried.
+        AppCapabilities.NetworkSimulatedWrite,
+    ];
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Work item 3 (ADR 0235 §3 of Kazo OS): IRC over TLS (6697, decision 4) and in clear (6667).
+    /// The approval shows them; once approved, the grant with these ports goes to the connected
+    /// Kazo server (ADR 0233), whose <c>BlockedPorts</c> keeps the last word. The network editor
+    /// refuses another relay port (<c>IrcNetworkList.DeclaredPorts</c>).
+    /// </remarks>
+    public override IReadOnlyList<string> RealNetworkPorts => ["tcp/6697", "tcp/6667"];
+
+    /// <inheritdoc />
+    public override IReadOnlyList<string> Icons => ["icons/app.svg"];
+
+    /// <inheritdoc />
+    public override IReadOnlyList<AssetManifest> Assets =>
+        [new("icons/app.svg", AssetKind.Image, new string('0', 64), "app-icon")];
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Opens wide enough for the three columns (channels, messages, users); a window narrower than
+    /// <see cref="CompactWidth"/> switches to one column, so it can be made as small as a phone.
+    /// </remarks>
+    public override WindowOptions? Window => new()
+    {
+        DefaultWidth = 960,
+        DefaultHeight = 620,
+        MinWidth = 340,
+        MinHeight = 400,
+    };
+}
