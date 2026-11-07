@@ -2,6 +2,7 @@ using System.Globalization;
 using Kazo.Irc.Protocol.Client;
 using Kazo.Irc.Protocol.Text;
 using Kazo.Irc.Protocol.Transport;
+using Kazo.Irc.Protocol.Messages;
 
 namespace Kazo.Irc.Chat;
 
@@ -35,7 +36,8 @@ public sealed class IrcSession : IAsyncDisposable
         Client.ChatMessage += OnChatMessage;
         Client.Activity += OnActivity;
         Client.ServerText += (_, e) => Add(Server, new ChatLine(e.Time, ChatLineKind.Server, null, e.Text));
-        Client.Error += (_, e) => Add(Server, new ChatLine(Time.GetUtcNow(), ChatLineKind.Error, null, e.Message));
+        Client.Error += OnError;
+        Client.MessageHandled += OnMessageHandled;
         Client.WhoisReceived += OnWhois;
         Client.SaslCompleted += (_, e) => Add(Server, new ChatLine(Time.GetUtcNow(), e.Success ? ChatLineKind.Server : ChatLineKind.Error, null, e.Message));
         Client.Reconnecting += (_, e) => Add(Server, new ChatLine(Time.GetUtcNow(), ChatLineKind.Error, null,
@@ -51,6 +53,9 @@ public sealed class IrcSession : IAsyncDisposable
 
     /// <summary>The user joined a channel (the conversation exists by then).</summary>
     public event Action<Conversation>? Joined;
+
+    /// <summary>The client reported an error (a connection failure carries its <c>IrcTransportErrors</c> code).</summary>
+    public event Action<IrcClientError>? Failed;
 
     /// <summary>The network.</summary>
     public IrcNetwork Network { get; }
@@ -185,6 +190,32 @@ public sealed class IrcSession : IAsyncDisposable
         {
             Joined?.Invoke(conversation);
         }
+    }
+
+    /// <summary>
+    /// The replies that change a conversation without adding a line: the end of a <c>NAMES</c>
+    /// list (the users), the topic and its author sent on join, the channel's modes. On a real
+    /// network they come after the <c>JOIN</c> has been drawn, so the view must be told.
+    /// </summary>
+    private static readonly HashSet<string> RedrawReplies = new(StringComparer.Ordinal) { "366", "331", "332", "333", "324", "AWAY", "ACCOUNT" };
+
+    private void OnMessageHandled(object? sender, IrcMessage message)
+    {
+        if (RedrawReplies.Contains(message.Command))
+        {
+            Changed?.Invoke();
+        }
+    }
+
+    private void OnError(object? sender, IrcClientError error)
+    {
+        // A connection failure gets a sentence the user can act on (work item 3); the other
+        // errors (a refused command, a nickname taken) show the server's own text.
+        var text = _texts.TransportErrors.TryGetValue(error.Code, out var format)
+            ? Format(format, Network.Name, error.Message)
+            : error.Message;
+        Add(Server, new ChatLine(Time.GetUtcNow(), ChatLineKind.Error, null, text));
+        Failed?.Invoke(error);
     }
 
     private void OnWhois(object? sender, IrcWhoisInfo info)

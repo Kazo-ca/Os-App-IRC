@@ -9,8 +9,9 @@ namespace Kazo.Irc;
 /// <remarks>
 /// Work item 1 declares the base: one window per user, on the desktop and on phones, and the app's
 /// own folder for its settings (<c>~/.config/ca.kazo.irc/settings.json</c>). Each later work item
-/// adds the capabilities its code uses, as the plan lists them: <c>network.real.access</c> and the
-/// real ports with the connection (work item 3, after Kazo OS ADR 0235 §3), the notifications and
+/// adds the capabilities its code uses, as the plan lists them: <c>network.real.access</c>,
+/// <c>network.simulated.write</c> and the real ports with the connection (work item 3, done, after
+/// Kazo OS ADR 0235 §3), the notifications and
 /// the logs (work item 4, done: <c>notifications.post</c>, <c>filesystem.user-home.read</c> and
 /// <c>.write</c>), opening a web address in the Browser (work item 5, done: <c>apps.launch</c>).
 /// </remarks>
@@ -76,7 +77,25 @@ public sealed class IrcApp : AppDefinition
         // Work item 5, decision 17: a web address of a message opens in a new window of the OS
         // Browser (KazoBrowser.OpenAsync).
         AppCapabilities.AppsLaunch,
+
+        // Work item 3, decisions 3, 4 and 11: the real network, by a WebSocket from the browser
+        // (KazoClientWebSocket) or through the Kazo server's relay (KazoTcpClient). Dangerous: an
+        // administrator approves it, with the ports below (ADR 0235 §3, ADR 0233 of Kazo OS).
+        AppCapabilities.NetworkRealAccess,
+
+        // KazoTcpClient.ConnectAsync opens a socket of the OS's network stack, which asks for
+        // network.simulated.write (normal) before the relay is tried.
+        AppCapabilities.NetworkSimulatedWrite,
     ];
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Work item 3 (ADR 0235 §3 of Kazo OS): IRC over TLS (6697, decision 4) and in clear (6667).
+    /// The approval shows them; once approved, the grant with these ports goes to the connected
+    /// Kazo server (ADR 0233), whose <c>BlockedPorts</c> keeps the last word. The network editor
+    /// refuses another relay port (<c>IrcNetworkList.DeclaredPorts</c>).
+    /// </remarks>
+    public override IReadOnlyList<string> RealNetworkPorts => ["tcp/6697", "tcp/6667"];
 
     /// <inheritdoc />
     public override IReadOnlyList<string> Icons => ["icons/app.svg"];

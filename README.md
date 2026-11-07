@@ -11,8 +11,12 @@ and the app opens in Kazo OS with its layout (three columns on a computer, one c
 panels on a phone) and the console font option (work item 1). The chat is wired to the window
 (work item 4): in a Debug build the "Kazo Demo" network, an IRC server inside the app, shows the
 conversations, mentions with OS notifications and the "(N) IRC" title, and the daily logs in
-`~/.local/share/ca.kazo.irc/logs/`. The real networks come with work item 3 (see the plan's
-progress table).
+`~/.local/share/ca.kazo.irc/logs/`. The real networks are reached since work item 3: **without any
+server** over WebSocket (UnrealIRCd is proposed, and any network that accepts IRCv3 WebSocket can be
+added), and **through the Kazo server** for the other networks (Libera.Chat and OFTC are proposed),
+with TLS on 6697. An administrator approves the real network the first time IRC opens. The networks
+are edited in the app ("Manage networks", `~/.config/ca.kazo.irc/networks.json`); a SASL password is
+kept in the OS keyring. See the plan's progress table.
 
 - Plan: [English](doc/en/plan.md) · [Français](doc/fr/plan.md)
 - Architecture of the code: [English](doc/en/architecture.md) · [Français](doc/fr/architecture.md)
@@ -26,7 +30,7 @@ cd Os-App-IRC
 dotnet run --project src/Kazo.Irc.Os      # Kazo OS with the IRC app, on http://localhost:5310
 ```
 
-The `external/KazoOs` submodule is Kazo OS on its release tag (3.0.0): it gives the version of the
+The `external/KazoOs` submodule is Kazo OS on its release tag (3.2.0): it gives the version of the
 Kazo OS packages. `Debug` builds the OS from the submodule's sources, `Release` takes the packages
 from nuget.org (what CI and the Kazo OS Store build).
 

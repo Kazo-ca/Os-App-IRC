@@ -3,6 +3,7 @@ using Kazo.Irc.Chat;
 using Kazo.Irc.Layout;
 using Kazo.Irc.Logs;
 using Kazo.Irc.Protocol.Client;
+using Kazo.Irc.Protocol.Transport;
 using Kazo.Irc.Settings;
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Apps;
@@ -35,8 +36,18 @@ public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
 
     private IStringLocalizer<Strings> L => _localizer ??= AppContext.GetLocalizer<Strings>();
 
+    private IIrcSecretStore? _secrets;
+    private bool _editorOpen;
+
+    /// <summary>
+    /// The networks that can be opened: not open yet, or whose connection stopped for good (a
+    /// failure that is not retried), so the user can try again.
+    /// </summary>
     private IReadOnlyList<IrcNetwork> AvailableNetworks =>
-        [.. _chat.Catalog.Networks.Where(network => _chat.Sessions.All(session => session.Network.Id != network.Id))];
+        [.. _chat.Catalog.Networks.Where(network => _chat.Sessions.All(session => session.Network.Id != network.Id || IrcChat.IsStopped(session)))];
+
+    /// <summary>The nickname of a network without one (decision 12): the OS user name.</summary>
+    private string DefaultNick => IrcNick.FromUserName(AppContext.UserLoginName is { Length: > 0 } name ? name : AppContext.UserId);
 
     private string InputPlaceholder => _chat.Selected switch
     {
@@ -78,7 +89,11 @@ public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
             _status = string.Format(CultureInfo.CurrentCulture, L["LogsFailed"], exception.Message);
             StateHasChanged();
         });
-        _chat = new IrcChat(IrcNetworks.Create(), new KazoIrcNotifier(AppContext), logs, Texts())
+        // Work item 3: the networks of networks.json (or the proposed ones), opened by WebSocket
+        // or through the Kazo server's relay; their SASL passwords are in the keyring.
+        var networks = await IrcNetworkList.LoadAsync(KazoIrcFileSystem.Instance, AppContext.HomeDirectory);
+        _secrets = new KazoIrcSecretStore(AppContext);
+        _chat = new IrcChat(IrcNetworks.Create(AppContext, networks), new KazoIrcNotifier(AppContext), logs, Texts())
         {
             LogsEnabled = _settings.LogsEnabled,
         };
@@ -105,6 +120,17 @@ public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
         WhoisUnknown = L["WhoisUnknown"],
         MentionTitle = L["MentionTitle"],
         PrivateTitle = L["PrivateTitle"],
+        TransportErrors = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [IrcTransportErrors.NoPermission] = L["ErrorNoPermission"],
+            [IrcTransportErrors.NoServer] = L["ErrorNoServer"],
+            [IrcTransportErrors.Refused] = L["ErrorRefused"],
+            [IrcTransportErrors.CertificateRefused] = L["ErrorCertificateRefused"],
+            [IrcTransportErrors.SimulatedHost] = L["ErrorSimulatedHost"],
+            [IrcTransportErrors.Unreachable] = L["ErrorUnreachable"],
+            [IrcTransportErrors.Lost] = L["ErrorLost"],
+            [IrcTransportErrors.NotSupported] = L["ErrorNotSupported"],
+        },
     };
 
     /// <summary>The chat changed: render, and keep the window title's counter (decision 14).</summary>
@@ -120,10 +146,139 @@ public sealed partial class IrcWindow : IAsyncDisposable, IWindowCloseGuard
         }
     });
 
-    private void Connect(IrcNetwork network)
+    /// <summary>
+    /// Opens a network with its nickname (the OS user name by default) and, when it has a SASL
+    /// account, the password from the keyring (decision 12). A locked keyring connects without
+    /// SASL and says so.
+    /// </summary>
+    private async Task Connect(IrcNetwork network)
     {
-        _chat.Connect(network, IrcNick.FromUserName(AppContext.UserLoginName is { Length: > 0 } name ? name : AppContext.UserId));
+        IrcSaslCredentials? sasl = null;
+        if (network.SaslAccount is { } account && _secrets is not null)
+        {
+            try
+            {
+                if (await _secrets.GetSaslPasswordAsync(network.Id) is { } password)
+                {
+                    sasl = new IrcSaslCredentials(account, password);
+                }
+            }
+            catch (InvalidOperationException exception)
+            {
+                _status = string.Format(CultureInfo.CurrentCulture, L["KeyringLocked"], network.Name, exception.Message);
+            }
+        }
+
+        _chat.Connect(network, network.Nick ?? DefaultNick, sasl);
         _layout.Close();
+    }
+
+    private void OpenEditor()
+    {
+        _editorOpen = true;
+        _layout.Close();
+    }
+
+    private void CloseEditor() => _editorOpen = false;
+
+    private async Task<bool> HasSavedPasswordAsync(IrcNetwork network)
+    {
+        try
+        {
+            return _secrets is not null && await _secrets.GetSaslPasswordAsync(network.Id) is not null;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// The editor saves a network: <c>networks.json</c> first, then its SASL password in the
+    /// keyring. A network open keeps its connection; the change applies to its next connection.
+    /// </summary>
+    /// <returns>False when the file or the keyring could not be written (the editor stays open).</returns>
+    private async Task<bool> SaveNetworkAsync(IrcNetworkEdit edit)
+    {
+        var networks = _chat.Catalog.EditableNetworks.ToList();
+        var index = networks.FindIndex(network => network.Id == edit.Network.Id);
+        if (index >= 0)
+        {
+            networks[index] = edit.Network;
+        }
+        else
+        {
+            networks.Add(edit.Network);
+        }
+
+        if (!await WriteNetworksAsync(networks))
+        {
+            return false;
+        }
+
+        try
+        {
+            if (edit.NewPassword is { } password)
+            {
+                await _secrets!.SetSaslPasswordAsync(edit.Network.Id, edit.Network.Name, password);
+            }
+            else if (edit.ForgetPassword)
+            {
+                await _secrets!.DeleteSaslPasswordAsync(edit.Network.Id);
+            }
+        }
+        catch (InvalidOperationException exception)
+        {
+            _status = string.Format(CultureInfo.CurrentCulture, L["KeyringLocked"], edit.Network.Name, exception.Message);
+            StateHasChanged();
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>The editor deletes a network: it leaves <c>networks.json</c>, and its password the keyring.</summary>
+    private async Task DeleteNetworkAsync(IrcNetwork network)
+    {
+        var networks = _chat.Catalog.EditableNetworks.Where(other => other.Id != network.Id).ToList();
+        if (!await WriteNetworksAsync(networks))
+        {
+            return;
+        }
+
+        try
+        {
+            await _secrets!.DeleteSaslPasswordAsync(network.Id);
+        }
+        catch (InvalidOperationException)
+        {
+            // A locked keyring keeps an entry nothing reads any more; it is replaced if the
+            // network comes back with a new password.
+        }
+    }
+
+    private async Task<bool> WriteNetworksAsync(IReadOnlyList<IrcNetwork> networks)
+    {
+        try
+        {
+            // The editor's buttons run in a child component, where the OS has not opened the
+            // app's context: enter it for the write.
+            await IrcNetworkList.SaveAsync(new AppScopedFileSystem(AppContext, KazoIrcFileSystem.Instance), AppContext.HomeDirectory, networks);
+            _chat.Catalog.SetEditableNetworks(networks);
+            _status = null;
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _status = string.Format(CultureInfo.CurrentCulture, L["NetworksSaveFailed"], exception.Message);
+            return false;
+        }
+        finally
+        {
+            // The editor calls back through plain delegates, not EventCallback: the window (the
+            // list of networks, the editor's own list, the status line) is redrawn here.
+            StateHasChanged();
+        }
     }
 
     private void Select(Conversation conversation)

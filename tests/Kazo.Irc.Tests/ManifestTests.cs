@@ -33,10 +33,11 @@ public sealed class ManifestTests
     }
 
     [Fact]
-    public void It_asks_for_its_folder_the_notifications_and_the_logs_and_nothing_dangerous()
+    public void It_asks_for_its_folder_the_notifications_the_logs_and_the_real_network_only()
     {
         // Work item 1: its own folder (settings.json). Work item 4: the notifications (decision 14)
-        // and the logs in ~/.local/share/ca.kazo.irc/logs (decision 15).
+        // and the logs in ~/.local/share/ca.kazo.irc/logs (decision 15). Work item 3: the real
+        // network (decisions 3 and 11) and the socket of the relay.
         Assert.Equal(
             [
                 AppCapabilities.FileSystemPrivateRead,
@@ -45,9 +46,24 @@ public sealed class ManifestTests
                 AppCapabilities.FileSystemUserHomeRead,
                 AppCapabilities.FileSystemUserHomeWrite,
                 AppCapabilities.AppsLaunch,
+                AppCapabilities.NetworkRealAccess,
+                AppCapabilities.NetworkSimulatedWrite,
             ],
             _app.Capabilities);
-        Assert.DoesNotContain(_app.Capabilities, AppCapabilities.IsDangerous);
+        Assert.Equal([AppCapabilities.NetworkRealAccess], _app.Capabilities.Where(AppCapabilities.IsDangerous));
+    }
+
+    [Fact]
+    public void It_declares_the_IRC_ports_for_the_relay()
+    {
+        // ADR 0235 §3 of Kazo OS: the approval shows them, the relay opens them unless BlockedPorts.
+        Assert.Equal(["tcp/6697", "tcp/6667"], _app.RealNetworkPorts);
+        Assert.Equal([6697, 6667], Kazo.Irc.Settings.IrcNetworkList.DeclaredPorts);
+
+        using JsonDocument manifest = ReadManifest();
+        string[] ports = [.. manifest.RootElement.GetProperty("realNetworkPorts").EnumerateArray().Select(port => port.GetString()!)];
+        // The build writes them sorted.
+        Assert.Equal(["tcp/6667", "tcp/6697"], ports);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using Kazo.Irc.Protocol.Client;
+using Kazo.Irc.Protocol.Transport;
 
 namespace Kazo.Irc.Protocol.Tests.Client;
 
@@ -80,6 +81,42 @@ public sealed class ReconnectionTests
         Assert.Equal(3, harness.Errors.Count(e => e.Code == "TRANSPORT" && e.Message == "Connection refused"));
         Assert.Equal(IrcClientState.Disconnected, harness.Client.State);
         Assert.Contains(IrcClientState.Connecting, harness.States);
+    }
+
+    [Fact]
+    public async Task A_permanent_transport_failure_is_reported_with_its_code_and_not_retried()
+    {
+        await using var harness = new ClientHarness(prepareTransport: (transport, _) =>
+            transport.ConnectFailure = new IrcTransportException(IrcTransportErrors.NoServer, "no Kazo server", isPermanent: true));
+
+        harness.Client.Start();
+        await harness.Client.Completion.WaitAsync(TimeSpan.FromSeconds(10));
+
+        var error = Assert.Single(harness.Errors);
+        Assert.Equal(IrcTransportErrors.NoServer, error.Code);
+        Assert.Empty(harness.Reconnects);
+        Assert.Single(harness.Transports);
+        Assert.Equal(IrcClientState.Disconnected, harness.Client.State);
+    }
+
+    [Fact]
+    public async Task A_transport_failure_that_can_pass_is_retried_with_its_code()
+    {
+        await using var harness = new ClientHarness(prepareTransport: (transport, index) =>
+        {
+            if (index == 0)
+            {
+                transport.ConnectFailure = new IrcTransportException(IrcTransportErrors.Unreachable, "unreachable", isPermanent: false);
+            }
+        });
+
+        harness.Client.Start();
+        await ClientHarness.WaitUntilAsync(() => harness.Reconnects.Count == 1);
+        harness.Time.Advance(harness.Reconnects[0].Delay);
+        await ClientHarness.WaitUntilAsync(() => harness.Transports.Count == 2);
+        await harness.Transport.WaitForSentAsync("USER ");
+
+        Assert.Equal(IrcTransportErrors.Unreachable, Assert.Single(harness.Errors).Code);
     }
 
     [Fact]

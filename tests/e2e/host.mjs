@@ -80,7 +80,24 @@ export async function openIrc(page, { mobile = false } = {}) {
         : page.getByText('Applications', { exact: true });
     await launcher.click({ timeout: 60_000 });
     await page.getByText('IRC', { exact: true }).first().click();
+    await approveIfAsked(page, page.locator('.irc-window'));
     await page.locator('.irc-window').waitFor({ timeout: 30_000 });
+}
+
+/**
+ * Approves, as the administrator "neo", the dangerous capability an app asks for at its first
+ * launch in a fresh profile (IRC's own network.real.access since work item 3, or the Browser's),
+ * then waits for the app.
+ * @param {import('playwright').Page} page The page.
+ * @param {import('playwright').Locator} app Something the app shows once it runs.
+ */
+export async function approveIfAsked(page, app) {
+    const approval = page.getByText('Administrator authorization required', { exact: false });
+    await approval.or(app).first().waitFor({ timeout: 30_000 });
+    if (await approval.isVisible()) {
+        await page.locator('input[type="password"]').last().fill('matrix123');
+        await page.getByRole('button', { name: 'Allow', exact: true }).click();
+    }
 }
 
 /**

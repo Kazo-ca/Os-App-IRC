@@ -1,0 +1,117 @@
+@using Kazo.Irc.Chat
+@using Kazo.Irc.Settings
+@* The network editor (decision 13): the networks of networks.json, each with its transport (a
+   WebSocket from the browser, or the Kazo server's relay with TLS), nickname, SASL account and
+   automatic channels. The SASL password goes to the OS keyring, never to the file (decision 12). *@
+<div class="network-editor" role="dialog" aria-modal="true" aria-labelledby="network-editor-title" @onkeydown="OnKeyDown">
+    <header class="network-editor-header">
+        <h2 id="network-editor-title">@(_draft is null ? Text("NetworksTitle") : _draft.Id is null ? Text("NetworkAdd") : Text("NetworkEdit"))</h2>
+        <button type="button" class="network-editor-close" aria-label="@Text("ClosePanel")" @onclick="CloseAsync">×</button>
+    </header>
+
+    @if (_draft is null)
+    {
+        <p class="network-editor-hint">@Text("NetworksHint")</p>
+        <ul class="network-editor-list">
+            @foreach (var network in Networks)
+            {
+                <li @key="network.Id" class="network-editor-row">
+                    <span class="network-editor-name">@network.Name</span>
+                    <span class="network-editor-route">@Route(network)</span>
+                    <span class="network-editor-actions">
+                        <button type="button" class="network-editor-button" aria-label="@Format("NetworkEditOne", network.Name)" @onclick="() => EditAsync(network)">@Text("Edit")</button>
+                        <button type="button" class="network-editor-button danger" aria-label="@Format("NetworkDeleteOne", network.Name)" @onclick="() => OnDelete.InvokeAsync(network)">@Text("Delete")</button>
+                    </span>
+                </li>
+            }
+        </ul>
+        <div class="network-editor-footer">
+            <button type="button" class="network-editor-button primary network-editor-add" @onclick="Add">+ @Text("NetworkAdd")</button>
+        </div>
+    }
+    else
+    {
+        <form class="network-editor-form" @onsubmit="SaveAsync">
+            <label class="network-field">
+                <span>@Text("NetworkName")</span>
+                <input type="text" @bind="_draft.Name" autocomplete="off" />
+            </label>
+
+            <fieldset class="network-field network-transport">
+                <legend>@Text("NetworkTransport")</legend>
+                <label class="network-choice">
+                    <input type="radio" name="irc-transport" checked="@(_draft.Transport == IrcTransportKinds.WebSocket)"
+                           @onchange="() => _draft.Transport = IrcTransportKinds.WebSocket" />
+                    <span>@Text("TransportWebSocket")<small>@Text("TransportWebSocketHint")</small></span>
+                </label>
+                <label class="network-choice">
+                    <input type="radio" name="irc-transport" checked="@(_draft.Transport == IrcTransportKinds.Relay)"
+                           @onchange="() => _draft.Transport = IrcTransportKinds.Relay" />
+                    <span>@Text("TransportRelay")<small>@Text("TransportRelayHint")</small></span>
+                </label>
+            </fieldset>
+
+            @if (_draft.Transport == IrcTransportKinds.WebSocket)
+            {
+                <label class="network-field">
+                    <span>@Text("NetworkWebSocketUrl")</span>
+                    <input type="url" @bind="_draft.WebSocketUrl" placeholder="wss://irc.example.org/" autocomplete="off" spellcheck="false" />
+                </label>
+            }
+            else
+            {
+                <div class="network-row">
+                    <label class="network-field network-host">
+                        <span>@Text("NetworkHost")</span>
+                        <input type="text" @bind="_draft.Host" placeholder="irc.example.org" autocomplete="off" spellcheck="false" />
+                    </label>
+                    <label class="network-field network-port">
+                        <span>@Text("NetworkPort")</span>
+                        <input type="text" inputmode="numeric" @bind="_draft.Port" />
+                    </label>
+                </div>
+                <label class="network-check">
+                    <input type="checkbox" @bind="_draft.UseTls" />
+                    <span>@Text("NetworkTls")</span>
+                </label>
+                <p class="network-field-hint">@Text("NetworkPortsHint")</p>
+            }
+
+            <label class="network-field">
+                <span>@Text("NetworkNick")</span>
+                <input type="text" @bind="_draft.Nick" placeholder="@DefaultNick" autocomplete="off" spellcheck="false" />
+            </label>
+            <div class="network-row">
+                <label class="network-field">
+                    <span>@Text("NetworkSaslAccount")</span>
+                    <input type="text" @bind="_draft.SaslAccount" autocomplete="off" spellcheck="false" />
+                </label>
+                <label class="network-field">
+                    <span>@Text("NetworkSaslPassword")</span>
+                    <input type="password" @bind="_draft.SaslPassword" autocomplete="new-password"
+                           placeholder="@(_draft.HasSavedPassword ? Text("NetworkPasswordKept") : null)" />
+                </label>
+            </div>
+            <p class="network-field-hint">@Text("NetworkSaslHint")</p>
+            <label class="network-field">
+                <span>@Text("NetworkAutoJoin")</span>
+                <input type="text" @bind="_draft.AutoJoin" placeholder="#kazo #help" autocomplete="off" spellcheck="false" />
+            </label>
+
+            @if (_problems.Count > 0)
+            {
+                <ul class="network-problems" role="alert">
+                    @foreach (var problem in _problems)
+                    {
+                        <li>@Text("Problem" + problem)</li>
+                    }
+                </ul>
+            }
+
+            <div class="network-editor-footer">
+                <button type="button" class="network-editor-button" @onclick="Cancel">@Text("Cancel")</button>
+                <button type="submit" class="network-editor-button primary">@Text("Save")</button>
+            </div>
+        </form>
+    }
+</div>

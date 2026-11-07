@@ -29,6 +29,25 @@ public sealed class ChannelModelTests
     }
 
     [Fact]
+    public async Task A_handled_line_is_announced_once_the_model_has_it()
+    {
+        await using var harness = new ClientHarness();
+        await harness.RegisterAsync();
+        var usersAtEndOfNames = -1;
+        harness.Client.MessageHandled += (_, message) =>
+        {
+            if (message.Command == "366")
+            {
+                usersAtEndOfNames = harness.Client.GetChannel("#kazo")!.UserCount;
+            }
+        };
+
+        await harness.JoinAsync("#kazo", "@neo trinity morpheus");
+
+        Assert.Equal(3, usersAtEndOfNames);
+    }
+
+    [Fact]
     public async Task Names_with_userhost_record_the_host()
     {
         await using var harness = new ClientHarness();

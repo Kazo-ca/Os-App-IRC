@@ -156,8 +156,57 @@
     border-color: var(--kos-accent, #42d392);
 }
 
+.channel-connect-name {
+    display: block;
+}
+
+/* Decision 13: « Kazo server required », under the network's name. */
+.channel-connect-note {
+    display: block;
+    margin-top: 2px;
+    padding-left: 1.1em;
+    color: var(--kos-text-muted, #8b949e);
+    font-size: 0.75rem;
+}
+
+.channel-connect-note.unavailable {
+    color: var(--kos-warning, #d29922);
+}
+
+.channel-manage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: var(--kos-radius-md, 6px);
+    background: transparent;
+    color: var(--kos-text-muted, #8b949e);
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.channel-manage:hover {
+    border-color: var(--kos-border, #30363d);
+    color: var(--kos-text-primary, #e6edf3);
+}
+
+.channel-manage-icon {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+}
+
 .channel-select:focus-visible,
 .channel-close:focus-visible,
+.channel-manage:focus-visible,
 .channel-connect:focus-visible {
     outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
     outline-offset: -2px;

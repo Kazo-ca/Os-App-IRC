@@ -9,9 +9,11 @@ namespace Kazo.Irc.Protocol.Transport;
 /// connection attempt and disposes it when the connection ends: a transport is used once.
 /// </para>
 /// <para>
-/// Implementations (chantier 3): WebSocket with the <c>text.ircv3.net</c> sub-protocol (one frame
-/// is one line, no CR LF); the relay's TCP stream (lines end with CR LF, cut by
-/// <see cref="Text.IrcLineBuffer"/>); and <see cref="FakeIrcTransport"/> for tests.
+/// Implementations (work item 3): <see cref="WebSocketIrcTransport"/>, the <c>text.ircv3.net</c>
+/// sub-protocol (one message is one line, no CR LF); <see cref="StreamIrcTransport"/>, the relay's
+/// TCP stream (lines end with CR LF, cut by <see cref="Text.IrcLineBuffer"/>); and
+/// <see cref="FakeIrcTransport"/> for tests. A failure the user can act on is an
+/// <see cref="IrcTransportException"/>, with a code and whether a new attempt can succeed.
 /// </para>
 /// </remarks>
 public interface IIrcTransport : IAsyncDisposable
