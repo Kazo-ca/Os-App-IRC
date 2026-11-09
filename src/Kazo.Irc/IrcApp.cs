@@ -48,7 +48,7 @@ public sealed class IrcApp : AppDefinition
 
     /// <inheritdoc />
     /// <remarks>The tag that publishes to the Kazo OS Store must be v + this version.</remarks>
-    public override string Version => "1.0.0";
+    public override string Version => "1.0.1";
 
     /// <inheritdoc />
     /// <remarks>

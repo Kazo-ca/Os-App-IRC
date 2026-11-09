@@ -185,6 +185,15 @@ try {
     if (!record.lines.includes('PRIVMSG #kazo :hello from the installed app')) throw new Error(`the line was not sent: ${record.lines.join(' | ')}`);
     log('IRC connected to UnrealIRCd over WebSocket, joined #kazo and talked.');
 
+    // A mIRC color and a link go through the parts of the BCL the trimmed OS removed up to 3.3.0
+    // (Int32.Parse of a span, String.Compare with offsets: Kazo-ca/Os ADR 0242). Before 1.0.1 the
+    // echoed line stopped the window with a MissingMethodException.
+    await input.fill('\u000304red\u0003 see https://kazo.ca/irc');
+    await input.press('Enter');
+    await page.locator('.message-line', { hasText: 'neo said: red see https://kazo.ca/irc' }).waitFor({ timeout: STEP_MS });
+    if (await page.getByText('ran into a problem').count() > 0) throw new Error('the IRC window stopped on a colored line with a link');
+    log('A colored line with a link is drawn.');
+
     // Libera.Chat: no Kazo server here, said clearly.
     await page.locator('.channel-connect', { hasText: 'Libera.Chat' }).click();
     await page.locator('.message-line', { hasText: 'Libera.Chat needs the Kazo server' }).waitFor({ timeout: STEP_MS });

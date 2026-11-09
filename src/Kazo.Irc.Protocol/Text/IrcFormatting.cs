@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 
 namespace Kazo.Irc.Protocol.Text;
@@ -213,7 +212,20 @@ public static class IrcFormatting
             i++;
         }
 
-        return i == start ? null : int.Parse(text.AsSpan(start, i - start), CultureInfo.InvariantCulture);
+        if (i == start)
+        {
+            return null;
+        }
+
+        // At most MaxColorDigits ASCII digits: read by hand. int.Parse(ReadOnlySpan<char>, IFormatProvider)
+        // is missing from the trimmed Kazo OS up to 3.3.0 (Kazo-ca/Os ADR 0242).
+        var value = 0;
+        for (var digit = start; digit < i; digit++)
+        {
+            value = (value * 10) + (text[digit] - '0');
+        }
+
+        return value;
     }
 
     /// <summary>99 is "the default color".</summary>

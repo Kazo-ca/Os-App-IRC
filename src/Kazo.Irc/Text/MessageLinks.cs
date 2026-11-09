@@ -90,7 +90,10 @@ public static class MessageLinks
     {
         foreach (var scheme in Schemes)
         {
-            if (string.Compare(text, start, scheme, 0, scheme.Length, StringComparison.OrdinalIgnoreCase) == 0)
+            // Not string.Compare(string, int, string, int, int, StringComparison): the trimmed Kazo OS
+            // up to 3.3.0 does not have that overload (Kazo-ca/Os ADR 0242).
+            if (text.Length - start >= scheme.Length
+                && text.AsSpan(start, scheme.Length).Equals(scheme, StringComparison.OrdinalIgnoreCase))
             {
                 return scheme.Length;
             }
