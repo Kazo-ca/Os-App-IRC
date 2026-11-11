@@ -422,7 +422,7 @@ check included), launch from the launcher, approval of `network.real.access`
 listing both ports, scoped CSS linked, no "Kazo Demo" network, the "Kazo server
 required" note, connection to UnrealIRCd over WebSocket (fake server), `/join`,
 send and receive, the clear message for Libera.Chat without a Kazo server, no
-console error. It found three things:
+console error. It found four things:
 
 1. **One assembly per package.** Kazo OS 3.2.0 packs and loads only the app's
    declared assembly, not its libraries: `kazopkg` refused IRC ("uses APIs this
@@ -445,6 +445,16 @@ console error. It found three things:
    issue [Kazo-ca/Os#420](https://github.com/Kazo-ca/Os/issues/420). The test
    tolerates that exact 404 before the launch, then checks the icon answers 200
    once IRC runs.
+4. **Missing overloads the check let through** (version 1.0.1, 2026-11-09):
+   `Int32.Parse(ReadOnlySpan<char>, IFormatProvider)` (mIRC colors,
+   `IrcFormatting`) and `String.Compare(string, int, string, int, int,
+   StringComparison)` (links, `MessageLinks`). The Kazo OS check only compared
+   the parameter count, and another overload of the same length existed: IRC
+   1.0.0 stopped in its window (`MissingMethodException`) on the first colored
+   message. IRC reads the digits by hand and compares a span. Kazo OS fixes the
+   check and keeps CoreLib whole ([ADR 0242](https://github.com/Kazo-ca/Os/blob/main/doc/en/wasm/dev/adr/0242-framework-api-for-installed-apps.md)).
+   The test now sends a colored line with a link: it fails with 1.0.0 and passes
+   with 1.0.1 in the published OS of `main` on 2026-11-09.
 
 Checked on 2026-11-07 with Kazo OS 3.2.0 (submodule `v3.2.0`, Release publish
 of `OS/Kazo.Os.Ecosystem`, .NET SDK 10.0.403) and the `KazoOsPack` package

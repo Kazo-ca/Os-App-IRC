@@ -15,7 +15,7 @@ public sealed class ManifestTests
         Assert.Equal("IRC", _app.Name);
         Assert.Equal("pub.kazo", _app.PublisherId);
         Assert.Equal("communication", _app.Category);
-        Assert.Equal("1.0.0", _app.Version);
+        Assert.Equal("1.0.1", _app.Version);
         Assert.Equal(AppKind.Window, _app.Kind);
         Assert.Equal(typeof(IrcWindow), _app.EntryPoint);
     }

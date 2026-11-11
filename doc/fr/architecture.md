@@ -430,7 +430,7 @@ OS/Kazo.Os.Ecosystem -c Release` du sous-module) : `sudo kazopkg install`
 `network.real.access` qui liste les deux ports, CSS isolé lié, pas de réseau
 « Kazo Demo », note « Serveur Kazo requis », connexion à UnrealIRCd par
 WebSocket (faux serveur), `/join`, envoyer et recevoir, message clair pour
-Libera.Chat sans serveur Kazo, aucune erreur dans la console. Il a trouvé trois
+Libera.Chat sans serveur Kazo, aucune erreur dans la console. Il a trouvé quatre
 choses :
 
 1. **Une seule assembly par paquet.** Kazo OS 3.2.0 ne met dans le paquet et ne
@@ -455,6 +455,17 @@ choses :
    charge) : issue [Kazo-ca/Os#420](https://github.com/Kazo-ca/Os/issues/420).
    Le test tolère ce 404 précis avant le lancement, puis vérifie que l'icône
    répond 200 une fois IRC ouvert.
+4. **Des surcharges absentes que le contrôle laissait passer** (version 1.0.1,
+   2026-11-09) : `Int32.Parse(ReadOnlySpan<char>, IFormatProvider)` (couleurs
+   mIRC, `IrcFormatting`) et `String.Compare(string, int, string, int, int,
+   StringComparison)` (liens, `MessageLinks`). Le contrôle de Kazo OS ne
+   comparait que le nombre de paramètres, et une autre surcharge de même
+   longueur existait : IRC 1.0.0 s'arrêtait dans sa fenêtre
+   (`MissingMethodException`) au premier message en couleurs. IRC lit les
+   chiffres à la main et compare un span. Kazo OS corrige le contrôle et garde
+   CoreLib entière ([ADR 0242](https://github.com/Kazo-ca/Os/blob/main/doc/fr/wasm/dev/adr/0242-framework-api-for-installed-apps.md)).
+   Le test envoie maintenant une ligne en couleurs avec un lien : il échoue
+   avec 1.0.0 et passe avec 1.0.1 dans l'OS publié de `main` du 2026-11-09.
 
 Vérifié le 2026-11-07 avec Kazo OS 3.2.0 (sous-module `v3.2.0`, publication
 Release de `OS/Kazo.Os.Ecosystem`, SDK .NET 10.0.403) et le paquet de
