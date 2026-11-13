@@ -73,7 +73,7 @@ and the icon are this repository's own.
 
 ## Try it
 
-<!-- "Open in Kazo OS" link: https://os.kazo.ca/?autolunch=ca.kazo.irc goes here once Kazo OS supports it. -->
+<!-- "Open in Kazo OS" link: https://os.kazo.ca/?autolaunch=ca.kazo.irc goes here once Kazo OS supports it. -->
 
 Open [Kazo OS](https://os.kazo.ca/) and install IRC from the **Kazo OS Store** (category Communication), or in the Kazo OS Terminal, as an administrator: `sudo kazopkg install Kazo-ca/Os-App-IRC`.
 
