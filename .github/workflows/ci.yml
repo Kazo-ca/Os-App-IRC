@@ -42,6 +42,9 @@ jobs:
       - name: Check the Kazo OS submodule
         run: bash .github/scripts/check-kazoos-submodule.sh
 
+      - name: Check the README shows the Store listing
+        run: node .github/scripts/store-readme.mjs --check
+
       # The Release profile: Kazo OS packages from nuget.org, at the submodule's version. This is
       # what the Kazo OS Store compiles. IrcDemoNetwork adds the demonstration network (an IRC
       # server in memory) that the end-to-end tests talk to; the Store and the packages are built
