@@ -76,9 +76,9 @@ et l'icône sont ceux du dépôt.
 
 ## Essayer
 
-<!-- Lien « Ouvrir dans Kazo OS » : https://os.kazo.ca/?autolaunch=ca.kazo.irc va ici quand Kazo OS le prendra en charge. -->
+[Ouvrir IRC dans Kazo OS](https://os.kazo.ca/?autolaunch=ca.kazo.irc) : le lien démarre Kazo OS, installe l'app depuis le Store officiel et l'ouvre.
 
-Ouvrez [Kazo OS](https://os.kazo.ca/) et installez IRC depuis le **Kazo OS Store** (catégorie Communication), ou dans le Terminal de Kazo OS, en administrateur : `sudo kazopkg install Kazo-ca/Os-App-IRC`.
+Ou ouvrez [Kazo OS](https://os.kazo.ca/) et installez IRC depuis le **Kazo OS Store** (catégorie Communication), ou dans le Terminal de Kazo OS, en administrateur : `sudo kazopkg install Kazo-ca/Os-App-IRC`.
 
 ## À propos de Kazo OS
 
