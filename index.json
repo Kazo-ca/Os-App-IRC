@@ -2,6 +2,11 @@
   "appId": "ca.kazo.irc",
   "versions": [
     {
+      "version": "1.0.3",
+      "path": "1.0.3/ca.kazo.irc-1.0.3.kazoapp",
+      "sha256": "906455b80199f62d957d754d91dbb1a53db8e810d2d1aad000bcd9b92da737fb"
+    },
+    {
       "version": "1.0.2",
       "path": "1.0.2/ca.kazo.irc-1.0.2.kazoapp",
       "sha256": "1be82d8153e2d974922b1de41e7ba938c8082257f3dc8d83914693a6e47feff7"
