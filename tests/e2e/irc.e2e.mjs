@@ -3,7 +3,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium, devices } from 'playwright';
-import { boot, ircOsWindow, openIrc, startHost } from './host.mjs';
+import { boot, ircOsWindow, openIrc, phoneHost, startHost } from './host.mjs';
 
 let host;
 let browser;
@@ -15,7 +15,8 @@ before(async () => {
 
 after(async () => {
     await browser?.close();
-    host?.stop();
+    await host?.stop();
+    host?.assertNoFailures();
 });
 
 const box = async locator => {
@@ -92,11 +93,12 @@ test('the console font is an option kept for the next time the app opens', { tim
 });
 
 test('on a phone the window is one column and the channels and users slide in as panels', { timeout: 300_000 }, async () => {
+    const phone = await phoneHost(host);
     const context = await browser.newContext({ ...devices['Pixel 7'] });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await boot(page, host.baseUrl);
+    await boot(page, phone.baseUrl);
     await openIrc(page, { mobile: true });
 
     const viewport = page.viewportSize();
@@ -127,4 +129,5 @@ test('on a phone the window is one column and the channels and users slide in as
     await page.locator('.irc-users.open').waitFor({ state: 'detached', timeout: 10_000 });
     assert.deepEqual(errors, []);
     await context.close();
+    await phone.stop();
 });
