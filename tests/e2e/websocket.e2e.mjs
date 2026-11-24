@@ -22,7 +22,8 @@ before(async () => {
 
 after(async () => {
     await browser?.close();
-    host?.stop();
+    await host?.stop();
+    host?.assertNoFailures();
 });
 
 test('a network added in the editor connects over WebSocket without a Kazo server', { timeout: 300_000 }, async () => {

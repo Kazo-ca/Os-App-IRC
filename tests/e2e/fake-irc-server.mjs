@@ -1,8 +1,8 @@
 // A small IRCv3 WebSocket server inside the tests: no real IRC network is reached. Playwright's
 // routeWebSocket answers the IRC client's WebSocket with it (the OS refuses a WebSocket to this
 // machine, a simulated host, so a server on localhost cannot be used). One WebSocket message is one
-// IRC line, without CR LF (text.ircv3.net). Used by websocket.e2e.mjs, tests/installed and
-// tests/store.
+// IRC line, without CR LF (text.ircv3.net). Used by websocket.e2e.mjs, chat.e2e.mjs (with the bot,
+// see testBotOptions), tests/installed and tests/store.
 
 /**
  * @typedef {object} FakeChannel
@@ -18,7 +18,50 @@
  * @property {Record<string, FakeChannel>} [channels] What a JOIN of a channel answers; a channel not
  *   listed gets the topic "Topic over WebSocket" and the user `@echo`.
  * @property {string} [echo] The nick that answers each PRIVMSG with `<nick> said: <text>`; empty for none.
+ * @property {string} [bot] The nick of a bot that talks back like kazo-bot of the demonstration
+ *   network (src/Kazo.Irc.Demo/DemoIrcServer.cs): a channel line naming it gets `<nick>: hello!…`,
+ *   `!mention N` names the sender N seconds later, `!private N` sends a private message N seconds
+ *   later, `!links` sends LINKS_MESSAGE, and a private message to it gets `You said: <text>`.
  */
+
+/** The delay of `!mention` and `!private` without a number, and the longest one (seconds). */
+const BOT_DEFAULT_DELAY = 3;
+const BOT_MAX_DELAY = 60;
+
+/** What the bot answers to `!links`: addresses, IRC formatting codes and text that looks like HTML. */
+export const LINKS_MESSAGE =
+    '\u0002Links\u0002: the docs (http://docs.hack/guide?topic=irc), in \u000304,01red\u0003 and \u001Ditalics\u001D. '
+    + '<b>Not bold</b> <script>alert(1)</script> https://kazo.ca/.';
+
+/**
+ * The options of a network with the bot, as the demonstration network is: #kazo with its topic,
+ * kazo-bot (operator), morpheus (voice) and trinity, and no echo.
+ * @returns {FakeIrcOptions}
+ */
+export function testBotOptions() {
+    return {
+        server: 'irc.test.example',
+        // No NETWORK in 005: the name the user gave in the editor ("Kazo Test") is the one shown.
+        echo: '',
+        bot: 'kazo-bot',
+        channels: {
+            '#kazo': { topic: 'Welcome to the Kazo OS IRC demonstration network', users: ['@kazo-bot', '+morpheus', 'trinity'] },
+        },
+    };
+}
+
+/**
+ * Reads `!command` or `!command N`: the delay in seconds (clamped to 0..60), or null when the text
+ * is not that command.
+ */
+function botCommand(text, command) {
+    const trimmed = text.trim();
+    if (trimmed.toLowerCase() === command) {
+        return BOT_DEFAULT_DELAY;
+    }
+    const match = trimmed.match(new RegExp(`^${command}\\s+(\\d+)$`, 'i'));
+    return match ? Math.min(Number(match[1]), BOT_MAX_DELAY) : null;
+}
 
 /**
  * Answers the IRC client like a small IRCv3 WebSocket server.
@@ -31,8 +74,46 @@ export function fakeIrcServer(ws, record, options = {}) {
     const network = options.network ?? 'E2E';
     const channels = options.channels ?? {};
     const echo = options.echo ?? 'echo';
+    const bot = options.bot ?? '';
     let nick = '*';
-    const send = line => ws.send(line);
+    let closed = false;
+    const send = line => {
+        if (!closed) {
+            ws.send(line);
+        }
+    };
+    const later = (seconds, line) => setTimeout(() => send(line), seconds * 1000);
+    const source = who => `${who}!~${who}@e2e`;
+    // The bot's answers (see FakeIrcOptions.bot); true when it answered.
+    const botAnswer = (target, text) => {
+        if (!bot) {
+            return false;
+        }
+        if (!target.startsWith('#')) {
+            if (target.toLowerCase() !== bot.toLowerCase()) {
+                return false;
+            }
+            send(`:${source(bot)} PRIVMSG ${nick} :You said: ${text}`);
+            return true;
+        }
+        const mention = botCommand(text, '!mention');
+        const privately = botCommand(text, '!private');
+        if (text.trim().toLowerCase() === '!links') {
+            send(`:${source(bot)} PRIVMSG ${target} :${LINKS_MESSAGE}`);
+        } else if (mention !== null) {
+            later(mention, `:${source(bot)} PRIVMSG ${target} :${nick}: you asked me to name you, here you are.`);
+        } else if (privately !== null) {
+            later(privately, `:${source(bot)} PRIVMSG ${nick} :Hello ${nick}, this is a private message.`);
+        } else if (text.toLowerCase().includes(bot.toLowerCase())) {
+            send(`:${source(bot)} PRIVMSG ${target} :${nick}: hello! Try !mention 5 or !private 5.`);
+        } else {
+            return false;
+        }
+        return true;
+    };
+    ws.onClose?.(() => {
+        closed = true;
+    });
     ws.onMessage(message => {
         const line = typeof message === 'string' ? message : Buffer.from(message).toString('utf8');
         record.lines.push(line);
@@ -72,11 +153,15 @@ export function fakeIrcServer(ws, record, options = {}) {
                 }
                 break;
             case 'PRIVMSG':
+                if (botAnswer(rest[0], trailing)) {
+                    break;
+                }
                 if (echo) {
                     send(`:${echo}!~${echo}@e2e PRIVMSG ${rest[0]} :${nick} said: ${trailing}`);
                 }
                 break;
             case 'QUIT':
+                closed = true;
                 ws.close();
                 break;
             default:

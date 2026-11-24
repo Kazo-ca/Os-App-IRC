@@ -1,9 +1,12 @@
-// End-to-end runs of the chat on the demonstration network (work item 4): `npm run test:e2e` after
-// `dotnet build Kazo.Irc.slnx -c Release -p:IrcDemoNetwork=true`. Each test boots a fresh profile.
+// End-to-end runs of the chat (work item 4): `npm run test:e2e` after `dotnet build Kazo.Irc.slnx -c
+// Release`. Each test boots a fresh profile. The chat goes to the test network (host.mjs,
+// TEST_NETWORK): a fake IRC server inside the test with a bot that talks back like kazo-bot of the
+// demonstration network, so the same runs work on the Store's package, which has no demonstration
+// network (Kazo OS ADR 0281 §5: in the CI they run on the published trimmed OS).
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium, devices } from 'playwright';
-import { approveIfAsked, boot, connectDemo, ircOsWindow, openIrc, runInTerminal, say, startHost } from './host.mjs';
+import { TEST_NETWORK, addTestNetwork, approveIfAsked, boot, connectTestNetwork, ircOsWindow, openIrc, phoneHost, runInTerminal, say, startHost } from './host.mjs';
 
 let host;
 let browser;
@@ -15,7 +18,8 @@ before(async () => {
 
 after(async () => {
     await browser?.close();
-    host?.stop();
+    await host?.stop();
+    host?.assertNoFailures();
 });
 
 test('join a channel, talk, get a mention while away: notification, title counter and log file', { timeout: 300_000 }, async () => {
@@ -25,7 +29,7 @@ test('join a channel, talk, get a mention while away: notification, title counte
     await boot(page, host.baseUrl);
     await openIrc(page);
 
-    await connectDemo(page);
+    await connectTestNetwork(page);
     const nick = (await page.locator('.message-line', { hasText: 'Connected as' }).innerText()).match(/Connected as (\S+)\./)[1];
     assert.equal(nick, 'neo', 'the nickname is the OS user name (decision 12)');
 
@@ -55,7 +59,7 @@ test('join a channel, talk, get a mention while away: notification, title counte
     // The bot names the user in 4 s; meanwhile the Terminal takes the focus and reads the log.
     await say(page, '!mention 4');
     const day = new Date().toISOString().slice(0, 10);
-    const cat = `cat "/home/neo/.local/share/ca.kazo.irc/logs/Kazo Demo/#kazo/${day}.log"`;
+    const cat = `cat "/home/neo/.local/share/ca.kazo.irc/logs/${TEST_NETWORK.name}/#kazo/${day}.log"`;
     await runInTerminal(page, cat);
     // The OS file system may take a few seconds to show the last appends to another app: read again.
     const logged = page.locator('.xterm-rows').getByText('<neo> kazo-bot: hello', { exact: false }).first();
@@ -90,7 +94,7 @@ test('a private message from the bot opens a conversation marked for the user', 
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     await boot(page, host.baseUrl);
     await openIrc(page);
-    await connectDemo(page);
+    await connectTestNetwork(page);
     await say(page, '/join #kazo');
     await page.locator('.irc-title', { hasText: '#kazo' }).waitFor({ timeout: 15_000 });
 
@@ -118,7 +122,7 @@ test('web addresses open in the OS Browser; formatting is drawn, markup stays te
     });
     await boot(page, host.baseUrl);
     await openIrc(page);
-    await connectDemo(page);
+    await connectTestNetwork(page);
     await say(page, '/join #kazo');
     await page.locator('.irc-title', { hasText: '#kazo' }).waitFor({ timeout: 15_000 });
 
@@ -166,26 +170,33 @@ test('closing the window disconnects; opened again it starts from the list of ne
     page.on('pageerror', error => errors.push(error.message));
     await boot(page, host.baseUrl);
     await openIrc(page);
-    await connectDemo(page);
+    await connectTestNetwork(page);
 
     await ircOsWindow(page).locator('.chrome-button-close').click();
     await page.locator('.irc-window').waitFor({ state: 'detached', timeout: 15_000 });
     // Opened again: a new window, not connected.
     await openIrc(page);
-    await page.locator('.channel-connect', { hasText: 'Kazo Demo' }).waitFor();
+    await page.locator('.channel-connect', { hasText: TEST_NETWORK.name }).waitFor();
     assert.deepEqual(errors, []);
     await page.close();
 });
 
 test('on a phone the conversation is joined from the channels panel', { timeout: 300_000 }, async () => {
+    const phone = await phoneHost(host);
     const context = await browser.newContext({ ...devices['Pixel 7'] });
     const page = await context.newPage();
-    await boot(page, host.baseUrl);
+    await boot(page, phone.baseUrl);
     await openIrc(page, { mobile: true });
 
     await page.getByRole('button', { name: 'Channels', exact: true }).tap();
     await page.locator('.irc-channels.open').waitFor({ timeout: 10_000 });
-    await page.locator('.channel-connect', { hasText: 'Kazo Demo' }).tap();
+    await addTestNetwork(page);
+    // Closing the network editor may close the panel too: open it again.
+    if (await page.locator('.irc-channels.open').count() === 0) {
+        await page.getByRole('button', { name: 'Channels', exact: true }).tap();
+        await page.locator('.irc-channels.open').waitFor({ timeout: 10_000 });
+    }
+    await page.locator('.channel-connect', { hasText: TEST_NETWORK.name }).tap();
     // Choosing a network closes the panel and shows its server tab.
     await page.locator('.irc-channels.open').waitFor({ state: 'detached', timeout: 10_000 });
     await page.locator('.message-line', { hasText: 'Connected as' }).waitFor({ timeout: 30_000 });
@@ -197,4 +208,5 @@ test('on a phone the conversation is joined from the channels panel', { timeout:
     const line = await page.locator('.message-line.own').last().boundingBox();
     assert.ok(line && line.width > 0 && line.x >= 0, 'the line is on screen');
     await context.close();
+    await phone.stop();
 });
